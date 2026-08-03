@@ -22,9 +22,9 @@
         .minds-badge { background: rgba(3, 105, 161, 0.4); color: #38bdf8; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
         .minds-content { font-size: 14px; color: #e2e8f0; line-height: 1.6; white-space: pre-wrap; }
         .style-block { background: #111827; border-left: 4px solid #38bdf8; padding: 10px; margin-top: 10px; border-radius: 4px; }
-        .style-共鳴 { border-left-color: #f43f5e; color: #f43f5e; font-weight: bold; }
-        .style-逆向 { border-left-color: #eab308; color: #eab308; font-weight: bold; }
-        .style-數字 { border-left-color: #10b981; color: #10b981; font-weight: bold; }
+        .style-resonance { border-left-color: #f43f5e; color: #f43f5e; font-weight: bold; }
+        .style-reverse { border-left-color: #eab308; color: #eab308; font-weight: bold; }
+        .style-number { border-left-color: #10b981; color: #10b981; font-weight: bold; }
         .weight-status { font-size: 12px; color: #38bdf8; background: #111827; padding: 6px 12px; border-radius: 6px; margin-bottom: 14px; border: 1px solid #1e293b; display: inline-block; }
         .loading-text { color: #eab308; font-weight: bold; display: none; margin-top: 15px; text-align: center; font-size: 14px; }
         .steam-badge { display: inline-block; background: linear-gradient(135deg, #1b2838, #2a475e); color: #66c0f4; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #66c0f4; }
@@ -58,7 +58,7 @@
         <button type="button" id="autoBtn" class="btn btn-auto" onclick="askMindsAgent(event, 'auto')">Get Today's Viral Pick (Auto)</button>
         <div class="hint">Auto 模式從 Steam 熱門榜實時抓取</div>
         
-        <div id="loading" class="loading-text">📡 Connecting Ethoswarm Nodes... Minds Agent 正在計算爆款權重並生成毒舌講稿...</div>
+        <div id="loading" class="loading-text">⏳ 處理中...</div>
         
         <div id="mindsBox" class="minds-output-container">
             <div class="minds-header">
@@ -70,265 +70,276 @@
     </div>
 
     <script>
-        const MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0.Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA"; 
-        const MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
-        const userAlias = "game_creator_session_001";
+        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0.Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
+        var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
+        var userAlias = "game_creator_session_001";
 
-        const DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
-        let gameWeights = loadWeights();
+        var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
+        var gameWeights = loadWeights();
 
-        // 🎮 Steam 熱門遊戲 fallback 列表（API 失敗時用）
-        const FALLBACK_GAMES = [
+        var FALLBACK_GAMES = [
             { name: "黑神話：悟空", players: "340k", type: "魂系" },
-            { name: "塞爾達傳說：王國之淚", players: "N/A", type: "動作" },
             { name: "艾爾登法環", players: "280k", type: "魂系" },
             { name: "GTA 5", players: "150k", type: "動作" },
-            { name: "Counter-Strike 2", players: "1.2M", type: "射擊" }
+            { name: "Counter-Strike 2", players: "1.2M", type: "射擊" },
+            { name: "爐石戰記", players: "45k", type: "卡牌" }
         ];
 
         function loadWeights() {
             try {
-                const saved = localStorage.getItem("gameWeights");
+                var saved = localStorage.getItem("gameWeights");
                 if (saved) {
-                    const parsed = JSON.parse(saved);
-                    return { ...DEFAULT_WEIGHTS, ...parsed };
+                    var parsed = JSON.parse(saved);
+                    var result = {};
+                    for (var key in DEFAULT_WEIGHTS) {
+                        result[key] = DEFAULT_WEIGHTS[key];
+                    }
+                    for (var key2 in parsed) {
+                        result[key2] = parsed[key2];
+                    }
+                    return result;
                 }
             } catch (e) {
-                console.warn("讀取 localStorage 失敗，使用預設值", e);
+                console.warn("讀取 localStorage 失敗", e);
             }
-            return { ...DEFAULT_WEIGHTS };
+            var def = {};
+            for (var k in DEFAULT_WEIGHTS) {
+                def[k] = DEFAULT_WEIGHTS[k];
+            }
+            return def;
         }
 
         function saveWeights() {
             try {
                 localStorage.setItem("gameWeights", JSON.stringify(gameWeights));
             } catch (e) {
-                console.warn("保存 localStorage 失敗", e);
+                console.warn("保存失敗", e);
             }
         }
 
         function detectGameType(game) {
-            const g = game.toLowerCase();
-            if (/悟空|魂|艾爾登|隻狼|血源|仁王|黑魂|黑暗靈魂|demon'?s? souls|dark souls|elden ring|sekiro|bloodborne|nioh|black myth|wukong/i.test(g)) return "魂系";
-            if (/射擊|fps|tps|cod|決勝時刻|戰地|battlefield|counter.?strike|絕地求生|pubg|apex|valorant|鬥陣特攻|overwatch|虹彩六號|rainbow six|cs2|csgo|槍戰/i.test(g)) return "射擊";
-            if (/卡牌|爐石|hearthstone|遊戲王|yu.?gi.?oh|mtg|magic the gathering|自走棋|auto.?chess|撲克|牌組/i.test(g)) return "卡牌";
+            var g = game.toLowerCase();
+            if (g.indexOf("悟空") >= 0 || g.indexOf("魂") >= 0 || g.indexOf("艾爾登") >= 0 || g.indexOf("隻狼") >= 0 || g.indexOf("elden") >= 0 || g.indexOf("sekiro") >= 0) {
+                return "魂系";
+            }
+            if (g.indexOf("射擊") >= 0 || g.indexOf("fps") >= 0 || g.indexOf("cod") >= 0 || g.indexOf("cs") >= 0 || g.indexOf("counter") >= 0 || g.indexOf("apex") >= 0 || g.indexOf("valorant") >= 0) {
+                return "射擊";
+            }
+            if (g.indexOf("卡牌") >= 0 || g.indexOf("爐石") >= 0 || g.indexOf("hearthstone") >= 0 || g.indexOf("遊戲王") >= 0) {
+                return "卡牌";
+            }
             return "動作";
         }
 
         function updateWeight(game, feedback) {
-            const type = detectGameType(game);
-            let change = 0;
+            var type = detectGameType(game);
             if (feedback === 'up') {
                 gameWeights[type] += 0.5;
-                change = 0.5;
             } else if (feedback === 'down') {
                 gameWeights[type] = Math.max(0, gameWeights[type] - 0.3);
-                change = -0.3;
             }
             saveWeights();
-            return { type, weight: gameWeights[type], change, feedback };
-        }
-
-        // ✅ 新增：從 Steam 官方 API 拉熱門榜
-        async function fetchSteamTopGame() {
-            const steamApiUrl = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
-            
-            try {
-                const response = await fetch(steamApiUrl);
-                if (!response.ok) throw new Error("Steam API 請求失敗");
-                
-                const data = await response.json();
-                const ranks = data?.response?.ranks || [];
-                
-                if (ranks.length === 0) throw new Error("Steam API 返回空數據");
-                
-                // 取前 10 名中隨機一個，避免永遠只推第一名
-                const top10 = ranks.slice(0, 10);
-                const picked = top10[Math.floor(Math.random() * top10.length)];
-                
-                return {
-                    name: picked.name,
-                    players: formatNumber(picked.concurrent_in_game),
-                    peak: formatNumber(picked.peak_in_game),
-                    source: "steam",
-                    type: detectGameType(picked.name)
-                };
-            } catch (err) {
-                console.warn("Steam API 調用失敗，使用 fallback 列表:", err.message);
-                
-                // 嘗試用 CORS 代理再試一次
-                try {
-                    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(steamApiUrl);
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) throw new Error("代理也失敗");
-                    
-                    const data = await response.json();
-                    const ranks = data?.response?.ranks || [];
-                    
-                    if (ranks.length > 0) {
-                        const top10 = ranks.slice(0, 10);
-                        const picked = top10[Math.floor(Math.random() * top10.length)];
-                        return {
-                            name: picked.name,
-                            players: formatNumber(picked.concurrent_in_game),
-                            peak: formatNumber(picked.peak_in_game),
-                            source: "steam-proxy",
-                            type: detectGameType(picked.name)
-                        };
-                    }
-                } catch (proxyErr) {
-                    console.warn("CORS 代理也失敗:", proxyErr.message);
-                }
-                
-                // 最終 fallback：從預設列表隨機選
-                const picked = FALLBACK_GAMES[Math.floor(Math.random() * FALLBACK_GAMES.length)];
-                return {
-                    name: picked.name,
-                    players: picked.players,
-                    peak: "N/A",
-                    source: "fallback",
-                    type: picked.type
-                };
-            }
+            return { type: type, weight: gameWeights[type], feedback: feedback };
         }
 
         function formatNumber(num) {
             if (!num) return "N/A";
             if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-            if (num >= 1000) return (num / 1000).toFixed(0) + "k";
+            if (num >= 1000) return Math.floor(num / 1000) + "k";
             return num.toString();
         }
 
-        async function askMindsAgent(e, type) {
-            if(e) { e.preventDefault(); }
-            
-            const gameInput = document.getElementById('gameInput').value;
-            const styleSelect = document.getElementById('styleSelect').value;
-            const weightSelect = document.getElementById('weightSelect').value;
-            const isHighStyle = styleSelect === 'high';
-            const mindsBox = document.getElementById('mindsBox');
-            const mindsContent = document.getElementById('mindsContent');
-            const loadingText = document.getElementById('loading');
-            
-            mindsBox.style.display = 'none';
-            loadingText.style.display = 'block';
+        function getWeightBadge(weightInfo) {
+            var badge = '';
+            if (weightInfo.feedback === 'up') {
+                badge = '📈 <strong>[影片表現反饋：好]</strong> <code>' + weightInfo.type + '</code> 權重 +0.5 → <strong>' + weightInfo.weight.toFixed(1) + '</strong>';
+            } else if (weightInfo.feedback === 'down') {
+                badge = '📉 <strong>[影片表現反饋：差]</strong> <code>' + weightInfo.type + '</code> 權重 -0.3 → <strong>' + weightInfo.weight.toFixed(1) + '</strong>';
+            } else {
+                badge = '➖ <strong>[未調整權重]</strong> <code>' + weightInfo.type + '</code> 維持 <strong>' + weightInfo.weight.toFixed(1) + '</strong>';
+            }
+            return badge;
+        }
 
-            const styleLabel = isHighStyle ? '高觀看率爆款' : '低觀看率冷門';
-            let targetGame = gameInput || '';
-            let steamData = null;
+        function getWeightStyle(feedback) {
+            if (feedback === 'down') return 'border-color: #475569; color: #94a3b8;';
+            if (feedback === 'none') return 'border-color: #374151; color: #9ca3af;';
+            return '';
+        }
 
-            // ✅ Auto 模式：先拉 Steam 熱門
-            if (type === 'auto') {
-                loadingText.textContent = "🎮 正在從 Steam 抓取今日熱門遊戲...";
-                steamData = await fetchSteamTopGame();
-                targetGame = steamData.name;
-                loadingText.textContent = "📡 Connecting Ethoswarm Nodes... Minds Agent 正在計算爆款權重並生成毒舌講稿...";
+        function generateHighStyleContent(game, weightBadge, wStyle) {
+            return '<div class="weight-status" style="' + wStyle + '">' + weightBadge + '</div>\n\n' +
+                '<strong>🎙️ 【布丁規範：幽默毒舌爆款講稿】</strong>\n' +
+                '• <strong>0-30秒 (Hook 痛點)：</strong> "你是不是也跟我一樣，興沖沖打開《' + game + '》，結果開局被路邊小兵連死五次，差點直接砸爛鍵盤摔滑鼠？今天就來扒光這款遊戲折磨人的真相！"\n' +
+                '• <strong>機制拆解：</strong> 深入分析其動作判定、打擊硬直與不講武德的關卡數值設定，看透這款遊戲是怎麼在核心機制上狠狠洗刷玩家的。\n' +
+                '• <strong>行動呼籲 (CTA)：</strong> "不想再當跪地死掉的菜鳥？立刻按讚並訂閱我的頻道，下期帶你用冷門神裝強行通關最高難度！"\n\n' +
+                '<strong>🔥 【布丁規範：YouTube 3種風格爆款標題】</strong>\n' +
+                '<div class="style-block"><span class="style-resonance">【情緒共鳴】：</span> 玩《' + game + '》差點玩到摔鍵盤！這款遊戲設計師真的太折磨人了...</div>\n' +
+                '<div class="style-block"><span class="style-reverse">【權威逆向】：</span> 大家都說《' + game + '》是年度神作，但我玩了20小時發現了這3個致命缺點！</div>\n' +
+                '<div class="style-block"><span class="style-number">【數字勾引】：</span> 僅靠 1 個冷門神裝！我竟然強行通關了《' + game + '》最高難度！</div>';
+        }
+
+        function generateLowStyleContent(game, weightBadge, wStyle) {
+            return '<div class="weight-status" style="' + wStyle + '">' + weightBadge + '</div>\n\n' +
+                '<strong>🎙️ 【冷門挖掘：深度分析講稿】</strong>\n' +
+                '• <strong>0-30秒 (Hook 好奇點)：</strong> "你知道《' + game + '》為什麼叫好不叫座嗎？明明品質過關，卻為什麼遲遲火不起來？今天來深度拆解這款被低估的冷門寶藏。"\n' +
+                '• <strong>冷門解析：</strong> 從傳播門檻、觀賞門檻、遊戲節奏三個角度，分析為什麼這款遊戲內容難以出爆款，以及它真正的核心魅力在哪裡。\n' +
+                '• <strong>行動呼籲 (CTA)：</strong> "如果你也喜歡這類小眾精品，記得訂閱我的頻道，專門挖掘那些被埋沒的好遊戲！"\n\n' +
+                '<strong>🧊 【冷門路線：YouTube 3種風格標題】</strong>\n' +
+                '<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【冷門挖掘】：</span> 為什麼《' + game + '》品質這麼好，卻沒人看？背後原因很殘酷...</div>\n' +
+                '<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【反向解析】：</span> 全網都在做爆款遊戲，但我偏要聊聊這款「撲街」的冷門佳作</div>\n' +
+                '<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【深度科普】：</span> 《' + game + '》為什麼火不起來？3個被忽視的傳播致命傷</div>';
+        }
+
+        function generateAutoFallback(pickedGame, isHighStyle, topTypeName, topTypeWeight) {
+            var sourceLabel = pickedGame.source === 'fallback' ? 'FALLBACK' : 'STEAM LIVE';
+            var sourceColor = pickedGame.source === 'fallback' ? '#f59e0b' : '#66c0f4';
+            var styleLabelAuto = isHighStyle ? '爆款' : '冷門分析';
+            var icon = isHighStyle ? '🔥' : '🧊';
+
+            var titles, labels, classes, blockStyle, spanStyle;
+
+            if (isHighStyle) {
+                titles = [
+                    "開局被虐到摔鍵盤？《" + pickedGame.name + "》新手不看這部片絕對卡關！",
+                    "全網吹爆的《" + pickedGame.name + "》，冷靜下來後，我發現了這2個隱藏瑕疵...",
+                    "99%玩家都漏掉！靠這 3 個開局隱藏支線道具，傷害直接翻倍！"
+                ];
+                labels = ['【情緒共鳴】', '【權威逆向】', '【數字勾引】'];
+                classes = ['style-resonance', 'style-reverse', 'style-number'];
+                blockStyle = '';
+                spanStyle = '';
+            } else {
+                titles = [
+                    "為什麼《" + pickedGame.name + "》熱度掉這麼快？背後原因很現實...",
+                    "滿分神作也有死角？聊聊《" + pickedGame.name + "》那些被忽視的缺點",
+                    "《" + pickedGame.name + "》為什麼留不住休閒玩家？3個傳播致命傷"
+                ];
+                labels = ['【冷門挖掘】', '【反向解析】', '【深度科普】'];
+                classes = ['', '', ''];
+                blockStyle = 'border-left-color: #64748b;';
+                spanStyle = 'color: #94a3b8; font-weight: bold;';
             }
 
-            let commandPrompt = type === 'generate' 
-                ? `生成 ${targetGame || '最新遊戲'} 的${styleLabel}企劃與布丁規範標題` 
-                : `Steam 今日熱門遊戲《${targetGame}》，請生成${styleLabel}的遊戲影片企劃與布丁規範標題。`;
+            return '<div class="weight-status" style="border-color: ' + sourceColor + '; color: ' + sourceColor + ';">🎮 <strong>[Steam 熱門榜]</strong> 《' + pickedGame.name + '》 | 在線: ' + pickedGame.players + ' | 峰值: ' + (pickedGame.peak || 'N/A') + ' <span class="steam-badge">' + sourceLabel + '</span></div>\n' +
+                '<div class="weight-status">🔍 <strong>[Auto 推薦]</strong> 遊戲類型: <strong>' + pickedGame.type + '</strong> | 權重最高: <strong>' + topTypeName + ' (' + topTypeWeight.toFixed(1) + ')</strong></div>\n' +
+                '<strong>🤖 Today\'s AI Auto Pick (' + styleLabelAuto + '): 《' + pickedGame.name + '》</strong>\n' +
+                '<p>• <strong>Audience Growth 數據：</strong> Steam 當前在線 ' + pickedGame.players + ' 人，短影音潛力巨大。</p>\n\n' +
+                '<strong>' + icon + ' 【自動生成之 3 種' + styleLabelAuto + '標題】</strong>\n' +
+                '<div class="style-block" style="' + blockStyle + '"><span class="' + classes[0] + '" style="' + spanStyle + '">' + labels[0] + '：</span> ' + titles[0] + '</div>\n' +
+                '<div class="style-block" style="' + blockStyle + '"><span class="' + classes[1] + '" style="' + spanStyle + '">' + labels[1] + '：</span> ' + titles[1] + '</div>\n' +
+                '<div class="style-block" style="' + blockStyle + '"><span class="' + classes[2] + '" style="' + spanStyle + '">' + labels[2] + '：</span> ' + titles[2] + '</div>';
+        }
 
-            try {
-                const response = await fetch('https://hellominds.ai', {
-                    method: 'POST',
-                    headers: { 'X-Api-Key': MINDS_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mindId: MIND_ID, alias: userAlias, message: commandPrompt })
-                });
-
-                const data = await response.json();
-                loadingText.style.display = 'none';
-                mindsBox.style.display = 'block';
-                
-                // 如果是 Auto 模式，在開頭加上 Steam 數據來源標記
-                let prefix = '';
-                if (type === 'auto' && steamData) {
-                    const sourceLabel = steamData.source === 'fallback' ? 'FALLBACK' : 'STEAM LIVE';
-                    const sourceColor = steamData.source === 'fallback' ? '#f59e0b' : '#66c0f4';
-                    prefix = `<div class="weight-status" style="border-color: ${sourceColor}; color: ${sourceColor};">` +
-                        `🎮 <strong>[Steam 熱門榜]</strong> 《${steamData.name}》 | 在線: ${steamData.players} | 峰值: ${steamData.peak}` +
-                        `<span class="steam-badge">${sourceLabel}</span></div>\n\n`;
+        function getTopWeightType() {
+            var maxKey = '動作';
+            var maxVal = 0;
+            for (var key in gameWeights) {
+                if (gameWeights[key] > maxVal) {
+                    maxVal = gameWeights[key];
+                    maxKey = key;
                 }
-                
-                mindsContent.innerHTML = prefix + (data.reply || data.text || data.message || "Minds Agent 響應成功！");
+            }
+            return { name: maxKey, weight: maxVal };
+        }
 
-            } catch (error) {
-                setTimeout(function() {
-                    loadingText.style.display = 'none';
-                    mindsBox.style.display = 'block';
+        function fetchSteamTopGame(callback) {
+            var steamUrl = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
+            var tried = 0;
 
-                    if (type === 'generate') {
-                        var game = gameInput || '黑神話：悟空';
-                        
-                        const weightInfo = updateWeight(game, weightSelect);
-                        let weightBadge = '';
-                        
-                        if (weightInfo.feedback === 'up') {
-                            weightBadge = `📈 <strong>[影片表現反饋：好]</strong> <code>${weightInfo.type}</code> 權重 +0.5 → <strong>${weightInfo.weight.toFixed(1)}</strong>`;
-                        } else if (weightInfo.feedback === 'down') {
-                            weightBadge = `📉 <strong>[影片表現反饋：差]</strong> <code>${weightInfo.type}</code> 權重 -0.3 → <strong>${weightInfo.weight.toFixed(1)}</strong>`;
+            function tryDirect() {
+                console.log("嘗試 Steam 直連...");
+                fetch(steamUrl)
+                    .then(function(res) {
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        var ranks = data.response && data.response.ranks ? data.response.ranks : [];
+                        if (ranks.length > 0) {
+                            var top10 = ranks.slice(0, 10);
+                            var picked = top10[Math.floor(Math.random() * top10.length)];
+                            console.log("Steam 直連成功:", picked.name);
+                            callback({
+                                name: picked.name,
+                                players: formatNumber(picked.concurrent_in_game),
+                                peak: formatNumber(picked.peak_in_game),
+                                source: "steam",
+                                type: detectGameType(picked.name)
+                            });
                         } else {
-                            weightBadge = `➖ <strong>[未調整權重]</strong> <code>${weightInfo.type}</code> 維持 <strong>${weightInfo.weight.toFixed(1)}</strong>`;
+                            tryProxy();
                         }
-                        
-                        const weightStatusStyle = weightInfo.feedback === 'down' 
-                            ? 'border-color: #475569; color: #94a3b8;' 
-                            : weightInfo.feedback === 'none' 
-                                ? 'border-color: #374151; color: #9ca3af;' 
-                                : '';
-                        
-                        if (isHighStyle) {
-                            mindsContent.innerHTML = `
-<div class="weight-status" style="${weightStatusStyle}">${weightBadge}</div>\n\n` +
-`<strong>🎙️ 【布丁規範：幽默毒舌爆款講稿】</strong>\n` +
-`• <strong>0-30秒 (Hook 痛點)：</strong> "你是不是也跟我一樣，興沖沖打開《${game}》，結果開局被路邊小兵連死五次，差點直接砸爛鍵盤摔滑鼠？今天就來扒光這款遊戲折磨人的真相！"\n` +
-`• <strong>機制拆解：</strong> 深入分析其動作判定、打擊硬直與不講武德的關卡數值設定，看透這款遊戲是怎麼在核心機制上狠狠洗刷玩家的。\n` +
-`• <strong>行動呼籲 (CTA)：</strong> "不想再當跪地死掉的菜鳥？立刻按讚並訂閱我的頻道，下期帶你用冷門神裝強行通關最高難度！"\n\n` +
-`<strong>🔥 【布丁規範：YouTube 3種風格爆款標題】</strong>\n` +
-`<div class="style-block"><span class="style-共鳴">【情緒共鳴】：</span> 玩《${game}》差點玩到摔鍵盤！這款遊戲設計師真的太折磨人了...</div>\n` +
-`<div class="style-block"><span class="style-逆向">【權威逆向】：</span> 大家都說《${game}》是年度神作，但我玩了20小時發現了這3個致命缺點！</div>\n` +
-`<div class="style-block"><span class="style-數字">【數字勾引】：</span> 僅靠 1 個冷門神裝！我竟然強行通關了《${game}》最高難度！</div>`;
+                    })
+                    .catch(function(e) {
+                        console.warn("Steam 直連失敗:", e.message);
+                        tryProxy();
+                    });
+            }
+
+            function tryProxy() {
+                console.log("嘗試 CORS 代理...");
+                var proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(steamUrl);
+                fetch(proxyUrl)
+                    .then(function(res) {
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        var ranks = data.response && data.response.ranks ? data.response.ranks : [];
+                        if (ranks.length > 0) {
+                            var top10 = ranks.slice(0, 10);
+                            var picked = top10[Math.floor(Math.random() * top10.length)];
+                            console.log("代理成功:", picked.name);
+                            callback({
+                                name: picked.name,
+                                players: formatNumber(picked.concurrent_in_game),
+                                peak: formatNumber(picked.peak_in_game),
+                                source: "steam-proxy",
+                                type: detectGameType(picked.name)
+                            });
                         } else {
-                            mindsContent.innerHTML = `
-<div class="weight-status" style="${weightStatusStyle}">${weightBadge}</div>\n\n` +
-`<strong>🎙️ 【冷門挖掘：深度分析講稿】</strong>\n` +
-`• <strong>0-30秒 (Hook 好奇點)：</strong> "你知道《${game}》為什麼叫好不叫座嗎？明明品質過關，卻為什麼遲遲火不起來？今天來深度拆解這款被低估的冷門寶藏。"\n` +
-`• <strong>冷門解析：</strong> 從傳播門檻、觀賞門檻、遊戲節奏三個角度，分析為什麼這款遊戲內容難以出爆款，以及它真正的核心魅力在哪裡。\n` +
-`• <strong>行動呼籲 (CTA)：</strong> "如果你也喜歡這類小眾精品，記得訂閱我的頻道，專門挖掘那些被埋沒的好遊戲！"\n\n` +
-`<strong>🧊 【冷門路線：YouTube 3種風格標題】</strong>\n` +
-`<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【冷門挖掘】：</span> 為什麼《${game}》品質這麼好，卻沒人看？背後原因很殘酷...</div>\n` +
-`<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【反向解析】：</span> 全網都在做爆款遊戲，但我偏要聊聊這款「撲街」的冷門佳作</div>\n` +
-`<div class="style-block" style="border-left-color: #64748b;"><span style="color: #94a3b8; font-weight: bold;">【深度科普】：</span> 《${game}》為什麼火不起來？3個被忽視的傳播致命傷</div>`;
+                            useFallback();
                         }
-                    } else {
-                        // Auto 模式 fallback
-                        const sortedWeights = Object.entries(gameWeights).sort((a, b) => b[1] - a[1]);
-                        const topType = sortedWeights[0];
-                        const styleLabelAuto = isHighStyle ? '爆款' : '冷門分析';
-                        
-                        const pickedGame = steamData || { name: "黑神話：悟空", players: "340k", type: "魂系" };
-                        const sourceLabel = pickedGame.source === 'fallback' ? 'FALLBACK' : 'STEAM LIVE';
-                        const sourceColor = pickedGame.source === 'fallback' ? '#f59e0b' : '#66c0f4';
-                        
-                        const highTitles = [
-                            "開局被虐到摔鍵盤？《" + pickedGame.name + "》新手不看這部片絕對卡關！",
-                            "全網吹爆的《" + pickedGame.name + "》，冷靜下來後，我發現了這2個隱藏瑕疵...",
-                            "99%玩家都漏掉！靠這 3 個開局隱藏支線道具，傷害直接翻倍！"
-                        ];
-                        const lowTitles = [
-                            "為什麼《" + pickedGame.name + "》熱度掉這麼快？背後原因很現實...",
-                            "滿分神作也有死角？聊聊《" + pickedGame.name + "》那些被忽視的缺點",
-                            "《" + pickedGame.name + "》為什麼留不住休閒玩家？3個傳播致命傷"
-                        ];
-                        
-                        const titles = isHighStyle ? highTitles : lowTitles;
-                        const styleLabels = isHighStyle 
-                            ? ['【情緒共鳴】', '【權威逆向】', '【數字勾引】']
-                            : ['【冷門挖掘】', '【反向解析】', '【深度科普】'];
-                        const styleClasses = isHighStyle 
-                            ? ['style-共鳴', 'style-逆向', 'style-數字']
-                            : ['', '', ''];
-                        const blockStyle = isHighStyle ? '' : 'border-left-color: #64748b;';
-                        const spanStyle = isHighStyle ? '' : 'color: #94a3b8; font-weight: bold;';
-                        
-                        min
+                    })
+                    .catch(function(e) {
+                        console.warn("代理失敗:", e.message);
+                        useFallback();
+                    });
+            }
+
+            function useFallback() {
+                console.log("使用 fallback");
+                var fb = FALLBACK_GAMES[Math.floor(Math.random() * FALLBACK_GAMES.length)];
+                callback({
+                    name: fb.name,
+                    players: fb.players,
+                    peak: "N/A",
+                    source: "fallback",
+                    type: fb.type
+                });
+            }
+
+            // 超時保護：8秒後強制 fallback
+            var timeoutId = setTimeout(function() {
+                console.warn("Steam 請求超時，強制 fallback");
+                tried = -1; // 標記已超時
+                useFallback();
+            }, 8000);
+
+            var origCallback = callback;
+            callback = function(result) {
+                if (tried === -1) return; // 已超時，忽略
+                clearTimeout(timeoutId);
+                tried = -1;
+                origCallback(result);
+            };
+
+            tryDirect();
+        }
+
+        function askMindsAgent(e, type) {
+            if (e) { e.preventDefault(); }
+            console.log("按鈕點擊:", type);
+
+            var gameInput = document.getEleme
