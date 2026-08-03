@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Viral Game Content Agent (Minds Certified)</title>
-    <!-- 🎨 100% 完整找回 V0 科技感深黑藍 UI 樣式，絕對不再是一片白字 -->
+    <!-- 🎨 100% 完整找回 V0 科技感深黑藍 UI 樣式 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0b0f19; color: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { max-width: 500px; width: 100%; background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
@@ -13,27 +13,108 @@
         .label { display: block; font-size: 14px; font-weight: 500; color: #d1d5db; margin-bottom: 8px; text-align: left; }
         .input-field { width: 100%; background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; color: white; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; outline: none; }
         .input-field::placeholder { color: #6b7280; }
-        .input-field:focus { border-color: #3b82f6; }
         .btn { width: 100%; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 12px; transition: background 0.2s; }
         .btn:hover { background: #1d4ed8; }
         .btn-auto { background: #10b981; }
         .btn-auto:hover { background: #059669; }
         .hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin-top: -4px; margin-bottom: 24px; text-align: left; }
-        .result-box { display: none; background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 20px; text-align: left; font-size: 14px; line-height: 1.6; margin-top: 16px; }
+        .result-box { display: none; background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 20px; text-align: left; font-size: 14px; line-height: 1.6; margin-top: 16px; white-space: pre-wrap; }
         .result-title { color: #38bdf8; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #374151; padding-bottom: 8px; font-size: 15px; }
-        .style-block { background: #0f172a; border-left: 4px solid #38bdf8; padding: 10px; margin-bottom: 10px; border-radius: 0 6px 6px 0; }
-        .style-title { font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-        .style-共鳴 { border-left-color: #f43f5e; }
-        .style-共鳴 .style-title { color: #f43f5e; }
-        .style-逆向 { border-left-color: #eab308; }
-        .style-逆向 .style-title { color: #eab308; }
-        .style-數字 { border-left-color: #10b981; }
-        .style-數字 .style-title { color: #10b981; }
-        .weight-status { font-size: 12px; color: #94a3b8; background: #1e293b; padding: 6px 12px; border-radius: 6px; margin-bottom: 14px; display: inline-block; border: 1px solid #334155; }
         .loading-text { color: #eab308; font-weight: bold; display: none; margin-top: 10px; text-align: center; font-size: 14px; }
         .footer-text { font-size: 12px; color: #4b5563; text-align: center; margin-top: 32px; border-top: 1px solid #1f2937; padding-top: 16px; }
         .footer-text a { color: #38bdf8; text-decoration: none; }
     </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Viral Game Content Agent</h1>
+        <div class="desc">Track 1: Audience Growth. Powered 100% by Minds API with Full Memory & Persistence.</div>
+        
+        <label class="label">I want to cover this game (leave empty to let the Agent choose)</label>
+        <input type="text" id="gameInput" class="input-field" placeholder="e.g. Black Myth: Wukong, Cyberpunk 2077...">
+        
+        <button id="genBtn" class="btn" onclick="askMindsAgent('generate')">Generate Plan for Game</button>
+        <button id="autoBtn" class="btn btn-auto" onclick="askMindsAgent('auto')">Get Today's Viral Pick (Auto)</button>
+        <div class="hint">Runs automatically once daily at 00:00 via Vercel Cron</div>
+        
+        <div id="loading" class="loading-text">⏳ Minds Agent (ID: 64db433e) 正在線上處理記憶變數並生成講稿...</div>
+        <div id="result" class="result-box"></div>
+
+        <div class="footer-text">
+            Built for Creative Minds Jam #1 | Code: <a href="https://github.com" target="_blank">GitHub Repository</a>
+        </div>
+    </div>
+
+    <script>
+        // 🔒 填入你的真實大賽憑證與專屬 Mind ID 配置
+        const MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTt.Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA"; 
+        const MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
+        // 固定 Session Alias 確保 Minds 雲端歷史記憶可以跨頁面被重複讀取
+        const userAlias = "game_creator_session_001";
+
+        async function askMindsAgent(type) {
+            const gameInput = document.getElementById('gameInput').value;
+            const resultBox = document.getElementById('result');
+            const loadingText = document.getElementById('loading');
+            
+            resultBox.style.display = 'none';
+            loadingText.style.display = 'block';
+
+            // 🤖 依據按鈕類型，組裝符合「布丁規範」的真實 Prompt 命令丟給遠端 Mind 運算
+            let commandPrompt = "";
+            if (type === 'generate') {
+                commandPrompt = `【大賽指令：生成計劃】
+                我指定了遊戲：《${gameInput || '最新熱門遊戲'}》。
+                請立刻根據以下規範，為我這款遊戲生成 YouTube 爆款企劃：
+                1. 檢查並更新記憶變數 game_weights。如果這款遊戲表現好、轉化高，請將該類型數值增加 0.5。
+                2. 講稿寫作規範：請用【幽默、毒舌但分析精闢】的語氣撰寫。結構必須包含：0-30秒拋出遊戲痛點（Hook）、中間穿插機制拆解、結尾要有行動呼籲（CTA）。
+                3. YouTube 標題生成規範：請提供 3 種風格標題，分別為【情緒共鳴】、【權威逆向】與【數字勾引】。`;
+            } else {
+                commandPrompt = `【大賽指令：自動推薦】
+                1. 請優先讀取你歷史記憶庫中的 game_weights 變數，優先推薦數值高的類型，並排斥數值低於 0.5 的類型。
+                2. 請依據這套記憶機制，自主推薦一款今天最能幫我實現 Audience Growth 的爆款 Steam/Reddit 遊戲。
+                3. 請同樣依據【幽默毒舌語氣】與【3種風格標題規範】輸出對應的分析成果。`;
+            }
+
+            try {
+                // 🔗 採用 Hello Minds 官方標準 API：使用 X-Access-Key 連線 Ethoswarm 伺服器
+                const response = await fetch('https://hellominds.ai', {
+                    method: 'POST',
+                    headers: {
+                        'X-Access-Key': MINDS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mindId: MIND_ID,
+                        alias: userAlias,
+                        message: commandPrompt
+                    })
+                });
+
+                const data = await response.json();
+                loadingText.style.display = 'none';
+                resultBox.style.display = 'block';
+                
+                // 讀取遠端 Mind 大腦即時思考並回傳的文字
+                if (data.reply || data.text || data.message) {
+                    resultBox.innerHTML = `<div class="result-title">🧠 Real-time Minds Agent Response:</div>` + 
+                                         `<p>${data.reply || data.text || data.message}</p>`;
+                } else {
+                    throw new Error("API connected but return empty text.");
+                }
+
+            } catch (error) {
+                // 🚨 報錯防線：提示用戶 API 連線錯誤，逼創作者去後台開通 Mind 狀態
+                loadingText.style.display = 'none';
+                resultBox.style.display = 'block';
+                resultBox.innerHTML = `<div class="result-title" style="color: #f43f5e;">❌ Minds Agent 連線異常</div>` +
+                                    `<p style="color: #94a3b8;">錯誤原因：Minds 伺服器回傳 Offline 或驗證失效。請確保您已在 <strong>hellominds.ai</strong> 後台將 Mind ID <code>${MIND_ID}</code> 設定為 Active 開機狀態，且已將布丁的 Prompt 灌入 System Prompt 中。</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
 </head>
 <body>
 
