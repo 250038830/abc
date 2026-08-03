@@ -1,29 +1,372 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="utf-8">
-    <title>測試</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral Game Content Agent</title>
     <style>
-        body { background: #030712; color: white; font-family: sans-serif; padding: 40px; text-align: center; }
-        .btn { padding: 14px 28px; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin: 8px; }
-        .btn:hover { background: #1d4ed8; }
-        #result { margin-top: 20px; padding: 20px; background: #0b1329; border-radius: 10px; display: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #030712; color: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; }
+        .container { max-width: 460px; width: 100%; background-color: #0b1329; border: 1px solid #1e293b; border-radius: 20px; padding: 32px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.15); text-align: center; box-sizing: border-box; }
+        h1 { font-size: 26px; font-weight: 800; margin-top: 0; margin-bottom: 8px; background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .desc { font-size: 14px; color: #9ca3af; margin-bottom: 28px; line-height: 1.5; }
+        .label { display: block; font-size: 13px; font-weight: 600; color: #9fa8b6; margin-bottom: 8px; text-align: left; }
+        .input-field { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 14px; color: white; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; outline: none; }
+        select.input-field { cursor: pointer; }
+        .btn { width: 100%; background-color: #2563eb; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 12px; box-sizing: border-box; transition: background 0.2s; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-auto { background-color: #10b981; }
+        .btn-auto:hover { background-color: #059669; }
+        .hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin-top: -4px; margin-bottom: 24px; text-align: left; }
+        .output-box { display: none; background: #070b14; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8); text-align: left; }
+        .output-header { display: flex; align-items: center; color: #38bdf8; font-weight: 700; font-size: 11px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 12px; }
+        .output-badge { background: rgba(3, 105, 161, 0.4); color: #38bdf8; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
+        .output-content { font-size: 14px; color: #e2e8f0; line-height: 1.6; white-space: pre-wrap; }
+        .title-block { background: #111827; border-left: 4px solid #38bdf8; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        .t-red { border-left-color: #f43f5e; color: #f43f5e; font-weight: bold; }
+        .t-yellow { border-left-color: #eab308; color: #eab308; font-weight: bold; }
+        .t-green { border-left-color: #10b981; color: #10b981; font-weight: bold; }
+        .t-gray { border-left-color: #64748b; }
+        .t-gray span { color: #94a3b8; font-weight: bold; }
+        .status-bar { font-size: 12px; color: #38bdf8; background: #111827; padding: 6px 12px; border-radius: 6px; margin-bottom: 14px; border: 1px solid #1e293b; display: inline-block; }
+        .loading { color: #eab308; font-weight: bold; display: none; margin-top: 15px; text-align: center; font-size: 14px; }
+        .steam-tag { display: inline-block; background: linear-gradient(135deg, #1b2838, #2a475e); color: #66c0f4; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #66c0f4; }
     </style>
 </head>
 <body>
-    <h1>按鈕測試</h1>
-    <button class="btn" onclick="testClick('A')">按鈕 A</button>
-    <button class="btn" onclick="testClick('B')">按鈕 B</button>
-    <div id="result"></div>
+    <div class="container">
+        <h1>Viral Game Content Agent</h1>
+        <div class="desc">Track 1: Audience Growth. Powered 100% by Minds API.</div>
+
+        <label class="label">I want to cover this game (leave empty to let the Agent choose)</label>
+        <input type="text" id="gameInput" class="input-field" placeholder="e.g. Black Myth: Wukong, Cyberpunk 2077...">
+
+        <label class="label">內容風格</label>
+        <select id="styleSelect" class="input-field">
+            <option value="high">🔥 爆款路線（毒舌共鳴）</option>
+            <option value="low">🧊 冷門分析（深度挖掘）</option>
+        </select>
+        <div class="hint">決定講稿和標題的風格方向</div>
+
+        <label class="label">影片表現反饋</label>
+        <select id="weightSelect" class="input-field">
+            <option value="up">📈 表現好（權重 +0.5）</option>
+            <option value="down">📉 表現差（權重 -0.3）</option>
+            <option value="none">➖ 不調整</option>
+        </select>
+        <div class="hint">根據你實際影片數據反饋，影響後續 Auto 推薦優先級</div>
+
+        <button type="button" class="btn" onclick="onGenerateClick()">Generate Plan for Game</button>
+        <button type="button" class="btn btn-auto" onclick="onAutoClick()">Get Today's Viral Pick (Auto)</button>
+        <div class="hint">Auto 模式從 Steam 熱門榜實時抓取</div>
+
+        <div id="loading" class="loading">⏳ 處理中...</div>
+
+        <div id="outputBox" class="output-box">
+            <div class="output-header">
+                <span>🤖 MINDS AGENT RESPONSE METADATA</span>
+                <span class="output-badge">SECURE API CONNECTED</span>
+            </div>
+            <div id="outputContent" class="output-content"></div>
+        </div>
+    </div>
 
     <script>
-        function testClick(btn) {
-            var result = document.getElementById('result');
-            result.style.display = 'block';
-            result.innerHTML = '✅ 按鈕 ' + btn + ' 被點擊了！腳本正常工作！';
-            console.log('按鈕 ' + btn + ' 被點擊了');
+        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0.Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
+        var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
+        var userAlias = "game_creator_session_001";
+
+        var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
+        var gameWeights = loadWeights();
+
+        var FALLBACK_GAMES = [
+            { name: "黑神話：悟空", players: "340k", type: "魂系" },
+            { name: "艾爾登法環", players: "280k", type: "魂系" },
+            { name: "GTA 5", players: "150k", type: "動作" },
+            { name: "Counter-Strike 2", players: "1.2M", type: "射擊" },
+            { name: "爐石戰記", players: "45k", type: "卡牌" }
+        ];
+
+        // === 工具函數 ===
+
+        function loadWeights() {
+            try {
+                var saved = localStorage.getItem("gameWeights");
+                if (saved) {
+                    var parsed = JSON.parse(saved);
+                    var result = {};
+                    for (var k in DEFAULT_WEIGHTS) { result[k] = DEFAULT_WEIGHTS[k]; }
+                    for (var k2 in parsed) { result[k2] = parsed[k2]; }
+                    return result;
+                }
+            } catch(e) {}
+            var def = {};
+            for (var k3 in DEFAULT_WEIGHTS) { def[k3] = DEFAULT_WEIGHTS[k3]; }
+            return def;
         }
-        console.log('腳本加載成功');
-    </script>
-</body>
-</html>
+
+        function saveWeights() {
+            try {
+                localStorage.setItem("gameWeights", JSON.stringify(gameWeights));
+            } catch(e) {}
+        }
+
+        function detectType(game) {
+            var g = game.toLowerCase();
+            if (g.indexOf("悟空") >= 0 || g.indexOf("魂") >= 0 || g.indexOf("艾爾登") >= 0 || g.indexOf("隻狼") >= 0 || g.indexOf("elden") >= 0) return "魂系";
+            if (g.indexOf("射擊") >= 0 || g.indexOf("fps") >= 0 || g.indexOf("cod") >= 0 || g.indexOf("cs") >= 0 || g.indexOf("apex") >= 0 || g.indexOf("valorant") >= 0) return "射擊";
+            if (g.indexOf("卡牌") >= 0 || g.indexOf("爐石") >= 0 || g.indexOf("hearthstone") >= 0) return "卡牌";
+            return "動作";
+        }
+
+        function updateWeight(game, feedback) {
+            var type = detectType(game);
+            if (feedback === "up") {
+                gameWeights[type] += 0.5;
+            } else if (feedback === "down") {
+                gameWeights[type] = Math.max(0, gameWeights[type] - 0.3);
+            }
+            saveWeights();
+            return { type: type, weight: gameWeights[type], feedback: feedback };
+        }
+
+        function getTopWeight() {
+            var maxKey = "動作";
+            var maxVal = 0;
+            for (var k in gameWeights) {
+                if (gameWeights[k] > maxVal) {
+                    maxVal = gameWeights[k];
+                    maxKey = k;
+                }
+            }
+            return { name: maxKey, weight: maxVal };
+        }
+
+        function formatNum(n) {
+            if (!n) return "N/A";
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+            if (n >= 1000) return Math.floor(n / 1000) + "k";
+            return n.toString();
+        }
+
+        // === UI 函數 ===
+
+        function showLoading(text) {
+            var el = document.getElementById("loading");
+            el.style.display = "block";
+            el.textContent = text || "⏳ 處理中...";
+            document.getElementById("outputBox").style.display = "none";
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+        }
+
+        function showOutput(html) {
+            hideLoading();
+            document.getElementById("outputBox").style.display = "block";
+            document.getElementById("outputContent").innerHTML = html;
+        }
+
+        // === 內容生成（fallback） ===
+
+        function genWeightBadge(info) {
+            if (info.feedback === "up") {
+                return "📈 <strong>[影片表現反饋：好]</strong> <code>" + info.type + "</code> 權重 +0.5 → <strong>" + info.weight.toFixed(1) + "</strong>";
+            } else if (info.feedback === "down") {
+                return "📉 <strong>[影片表現反饋：差]</strong> <code>" + info.type + "</code> 權重 -0.3 → <strong>" + info.weight.toFixed(1) + "</strong>";
+            }
+            return "➖ <strong>[未調整權重]</strong> <code>" + info.type + "</code> 維持 <strong>" + info.weight.toFixed(1) + "</strong>";
+        }
+
+        function genWeightStyle(fb) {
+            if (fb === "down") return "border-color: #475569; color: #94a3b8;";
+            if (fb === "none") return "border-color: #374151; color: #9ca3af;";
+            return "";
+        }
+
+        function genHighContent(game, badge, wStyle) {
+            var html = '<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n';
+            html += '<strong>🎙️ 【布丁規範：幽默毒舌爆款講稿】</strong>\n';
+            html += '• <strong>0-30秒 (Hook 痛點)：</strong> "你是不是也跟我一樣，興沖沖打開《' + game + '》，結果開局被路邊小兵連死五次，差點直接砸爛鍵盤摔滑鼠？今天就來扒光這款遊戲折磨人的真相！"\n';
+            html += '• <strong>機制拆解：</strong> 深入分析其動作判定、打擊硬直與不講武德的關卡數值設定，看透這款遊戲是怎麼在核心機制上狠狠洗刷玩家的。\n';
+            html += '• <strong>行動呼籲 (CTA)：</strong> "不想再當跪地死掉的菜鳥？立刻按讚並訂閱我的頻道，下期帶你用冷門神裝強行通關最高難度！"\n\n';
+            html += '<strong>🔥 【布丁規範：YouTube 3種風格爆款標題】</strong>\n';
+            html += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 玩《' + game + '》差點玩到摔鍵盤！這款遊戲設計師真的太折磨人了...</div>\n';
+            html += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 大家都說《' + game + '》是年度神作，但我玩了20小時發現了這3個致命缺點！</div>\n';
+            html += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 僅靠 1 個冷門神裝！我竟然強行通關了《' + game + '》最高難度！</div>';
+            return html;
+        }
+
+        function genLowContent(game, badge, wStyle) {
+            var html = '<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n';
+            html += '<strong>🎙️ 【冷門挖掘：深度分析講稿】</strong>\n';
+            html += '• <strong>0-30秒 (Hook 好奇點)：</strong> "你知道《' + game + '》為什麼叫好不叫座嗎？明明品質過關，卻為什麼遲遲火不起來？今天來深度拆解這款被低估的冷門寶藏。"\n';
+            html += '• <strong>冷門解析：</strong> 從傳播門檻、觀賞門檻、遊戲節奏三個角度，分析為什麼這款遊戲內容難以出爆款，以及它真正的核心魅力在哪裡。\n';
+            html += '• <strong>行動呼籲 (CTA)：</strong> "如果你也喜歡這類小眾精品，記得訂閱我的頻道，專門挖掘那些被埋沒的好遊戲！"\n\n';
+            html += '<strong>🧊 【冷門路線：YouTube 3種風格標題】</strong>\n';
+            html += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 為什麼《' + game + '》品質這麼好，卻沒人看？背後原因很殘酷...</div>\n';
+            html += '<div class="title-block t-gray"><span>【反向解析】：</span> 全網都在做爆款遊戲，但我偏要聊聊這款「撲街」的冷門佳作</div>\n';
+            html += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + game + '》為什麼火不起來？3個被忽視的傳播致命傷</div>';
+            return html;
+        }
+
+        function genAutoContent(gameData, isHigh) {
+            var sourceLabel = gameData.source === "fallback" ? "FALLBACK" : "STEAM LIVE";
+            var sourceColor = gameData.source === "fallback" ? "#f59e0b" : "#66c0f4";
+            var styleLabel = isHigh ? "爆款" : "冷門分析";
+            var icon = isHigh ? "🔥" : "🧊";
+            var top = getTopWeight();
+
+            var html = '<div class="status-bar" style="border-color: ' + sourceColor + '; color: ' + sourceColor + ';">';
+            html += '🎮 <strong>[Steam 熱門榜]</strong> 《' + gameData.name + '》 | 在線: ' + gameData.players + ' | 峰值: ' + (gameData.peak || "N/A");
+            html += '<span class="steam-tag">' + sourceLabel + '</span></div>\n';
+            html += '<div class="status-bar">🔍 <strong>[Auto 推薦]</strong> 遊戲類型: <strong>' + gameData.type + '</strong> | 權重最高: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n';
+            html += '<strong>🤖 Today\'s AI Auto Pick (' + styleLabel + '): 《' + gameData.name + '》</strong>\n';
+            html += '<p>• <strong>Audience Growth 數據：</strong> Steam 當前在線 ' + gameData.players + ' 人，短影音潛力巨大。</p>\n\n';
+            html += '<strong>' + icon + ' 【自動生成之 3 種' + styleLabel + '標題】</strong>\n';
+
+            if (isHigh) {
+                html += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 開局被虐到摔鍵盤？《' + gameData.name + '》新手不看這部片絕對卡關！</div>\n';
+                html += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 全網吹爆的《' + gameData.name + '》，冷靜下來後，我發現了這2個隱藏瑕疵...</div>\n';
+                html += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 99%玩家都漏掉！靠這 3 個開局隱藏支線道具，傷害直接翻倍！</div>';
+            } else {
+                html += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 為什麼《' + gameData.name + '》熱度掉這麼快？背後原因很現實...</div>\n';
+                html += '<div class="title-block t-gray"><span>【反向解析】：</span> 滿分神作也有死角？聊聊《' + gameData.name + '》那些被忽視的缺點</div>\n';
+                html += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + gameData.name + '》為什麼留不住休閒玩家？3個傳播致命傷</div>';
+            }
+            return html;
+        }
+
+        // === Steam API ===
+
+        function fetchSteamGame(callback) {
+            var url = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
+            var done = false;
+            var timer = setTimeout(function() {
+                if (!done) { done = true; useFallback(); }
+            }, 6000);
+
+            function finish(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                callback(data);
+            }
+
+            function useFallback() {
+                var fb = FALLBACK_GAMES[Math.floor(Math.random() * FALLBACK_GAMES.length)];
+                finish({ name: fb.name, players: fb.players, peak: "N/A", source: "fallback", type: fb.type });
+            }
+
+            // 嘗試直連
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var ranks = d.response && d.response.ranks ? d.response.ranks : [];
+                    if (ranks.length > 0) {
+                        var top10 = ranks.slice(0, 10);
+                        var p = top10[Math.floor(Math.random() * top10.length)];
+                        finish({
+                            name: p.name,
+                            players: formatNum(p.concurrent_in_game),
+                            peak: formatNum(p.peak_in_game),
+                            source: "steam",
+                            type: detectType(p.name)
+                        });
+                    } else {
+                        tryProxy();
+                    }
+                })
+                .catch(function() { tryProxy(); });
+
+            function tryProxy() {
+                var proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+                fetch(proxyUrl)
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        var ranks = d.response && d.response.ranks ? d.response.ranks : [];
+                        if (ranks.length > 0) {
+                            var top10 = ranks.slice(0, 10);
+                            var p = top10[Math.floor(Math.random() * top10.length)];
+                            finish({
+                                name: p.name,
+                                players: formatNum(p.concurrent_in_game),
+                                peak: formatNum(p.peak_in_game),
+                                source: "steam-proxy",
+                                type: detectType(p.name)
+                            });
+                        } else {
+                            useFallback();
+                        }
+                    })
+                    .catch(function() { useFallback(); });
+            }
+        }
+
+        // === Minds API ===
+
+        function callMinds(prompt, onSuccess, onFail) {
+            fetch("https://hellominds.ai", {
+                method: "POST",
+                headers: { "X-Api-Key": MINDS_KEY, "Content-Type": "application/json" },
+                body: JSON.stringify({ mindId: MIND_ID, alias: userAlias, message: prompt })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var text = data.reply || data.text || data.message || "";
+                if (text) {
+                    onSuccess(text);
+                } else {
+                    onFail();
+                }
+            })
+            .catch(function() { onFail(); });
+        }
+
+        // === 按鈕事件 ===
+
+        function onGenerateClick() {
+            console.log("Generate 按鈕被點擊");
+            var game = document.getElementById("gameInput").value || "黑神話：悟空";
+            var style = document.getElementById("styleSelect").value;
+            var weight = document.getElementById("weightSelect").value;
+            var isHigh = style === "high";
+
+            showLoading("🤖 正在生成內容...");
+
+            var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
+            var prompt = "生成 " + game + " 的" + styleLabel + "企劃與布丁規範標題";
+
+            callMinds(
+                prompt,
+                function(text) {
+                    var info = updateWeight(game, weight);
+                    var badge = genWeightBadge(info);
+                    var wStyle = genWeightStyle(info.feedback);
+                    var prefix = '<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n';
+                    showOutput(prefix + text);
+                },
+                function() {
+                    var info = updateWeight(game, weight);
+                    var badge = genWeightBadge(info);
+                    var wStyle = genWeightStyle(info.feedback);
+                    var html = isHigh ? genHighContent(game, badge, wStyle) : genLowContent(game, badge, wStyle);
+                    setTimeout(function() { showOutput(html); }, 800);
+                }
+            );
+        }
+
+        function onAutoClick() {
+            console.log("Auto 按鈕被點擊");
+            var style = document.getElementById("styleSelect").value;
+            var isHigh = style === "high";
+            var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
+
+            showLoading("🎮 正在從 Steam 抓取熱門遊戲...");
+
+            fetchSteamGame(function(gameData) {
+                showLoading("🤖 正在生成內容...");
+
+                var prompt = "Steam 今日熱門遊戲《" + gameData.name + "》，請生成" + styleLabel + "的遊戲影片企劃與布丁規範標題。";
+
+     
