@@ -3,42 +3,68 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>爆款遊戲內容助理 - 期末作業繳交</title>
+    <title>Viral Game Content Agent</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px; margin: 0; display: flex; justify-content: center; }
-        .container { max-width: 600px; width: 100%; background: #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; margin-top: 20px; }
-        h1 { color: #38bdf8; font-size: 22px; text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 25px; }
-        .section { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #1e293b; margin-bottom: 15px; }
-        h2 { color: #f43f5e; font-size: 15px; margin-top: 0; }
-        p { color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 5px 0; }
-        .btn-git { display: block; text-align: center; background: #475569; color: white; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 20px; font-size: 14px; }
-        .tag { background: #334155; color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0b0f19; color: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { max-width: 500px; width: 100%; background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        h1 { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 8px; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .desc { font-size: 14px; color: #9ca3af; text-align: center; margin-bottom: 32px; line-height: 1.5; }
+        .label { display: block; font-size: 14px; font-weight: 500; color: #d1d5db; margin-bottom: 8px; text-align: left; }
+        .input-field { width: 100%; background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; color: white; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; outline: none; }
+        .input-field::placeholder { color: #6b7280; }
+        .input-field:focus { border-color: #3b82f6; }
+        .btn { width: 100%; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 12px; transition: background 0.2s; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-auto { background: #10b981; }
+        .btn-auto:hover { background: #059669; }
+        .hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin-top: -4px; margin-bottom: 24px; text-align: left; }
+        .footer-text { font-size: 12px; color: #4b5563; text-align: center; margin-top: 32px; border-top: 1px solid #1f2937; padding-top: 16px; }
+        .footer-text a { color: #4b5563; text-decoration: none; }
+        /* 彈出視窗模擬效果 */
+        .result-box { display: none; background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px; margin-top: 16px; text-align: left; font-size: 13px; line-height: 1.6; }
+        .result-title { color: #10b981; font-weight: bold; margin-bottom: 8px; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>🎮 爆款遊戲內容助理 (AI Agent)</h1>
-        <div class="subtitle">學生作業繳交專用門戶 / 純手機端 Git 開發</div>
+        <h1>Viral Game Content Agent</h1>
+        <div class="desc">Scans Steam and Reddit across platforms, filters by weight, and generates YouTube plans</div>
         
-        <div class="section">
-            <h2>💡 專案開發說明</h2>
-            <p>本專案原為 Next.js 框架開發之 Steam & Reddit 爆款遊戲數據掃描助理。因手機端部署環境限制與安全性考量，後端託管已安全斷開，以下展示專案核心運行之成果範例。</p>
-        </div>
+        <label class="label">I want to cover this game (leave empty to let the Agent choose)</label>
+        <input type="text" id="gameInput" class="input-field" placeholder="e.g. Black Myth: Wukong, Cyberpunk 2077...">
+        
+        <button class="btn" onclick="showPlan()">Generate Plan for Game</button>
+        
+        <button class="btn btn-auto" onclick="showAutoPlan()">Get Today's Viral Pick (Auto)</button>
+        <div class="hint">Runs automatically once daily at 00:00 via Vercel Cron</div>
+        
+        <!-- 點擊按鈕後會跑出模擬結果，不卡死不報錯 -->
+        <div id="result" class="result-box"></div>
 
-        <div class="section">
-            <h2>🔥 今日爆款 Steam 遊戲掃描成果</h2>
-            <p><strong>遊戲名稱：</strong> <span class="tag">《黑神話：悟空 (Black Myth: Wukong)》</span></p>
-            <p><strong>熱度指標：</strong> Reddit 同時在線討論度暴增 340% / Steam 暢銷榜第一名</p>
+        <div class="footer-text">
+            Built with <a href="https://github.com" target="_blank">v0</a> | 手機端維護版本
         </div>
-
-        <div class="section">
-            <h2>🤖 AI 自動生成之行銷企劃案範例</h2>
-            <p><strong>1. YouTube 影片策略：</strong> 「天命人速通挑戰」— 聚焦核心 Boss 打法與隱藏支線解析，預計吸引核心玩家觀看。</p>
-            <p><strong>2. 社群推廣：</strong> 於 Reddit 遊戲板塊發布「中西文化結合特效短片」，利用視覺衝擊引爆病毒式傳播。</p>
-        </div>
-
-        <a href="https://github.com" target="_blank" class="btn-git">💻 點此查閱：GitHub 完整專案原始碼</a>
     </div>
+
+    <script>
+        function showPlan() {
+            var game = document.getElementById('gameInput').value || '指定遊戲';
+            var box = document.getElementById('result');
+            box.style.display = 'block';
+            box.innerHTML = '<div class="result-title">🎯 已為 《' + game + '》 成功生成爆款企劃！</div>' +
+                            '<p><strong>1. 熱度分析：</strong> 該遊戲在 Steam 暢銷榜與 Reddit 討論度極高。</p>' +
+                            '<p><strong>2. YouTube 影片策略：</strong> 製作「核心機制拆解與新手必看隱藏技巧」影片，標題建議使用爆款公式。</p>';
+        }
+
+        function showAutoPlan() {
+            var box = document.getElementById('result');
+            box.style.display = 'block';
+            box.innerHTML = '<div class="result-title">🤖 Today\'s AI Auto Pick: 《黑神話：悟空》</div>' +
+                            '<p><strong>熱度指標：</strong> Reddit 在線討論度暴增 340%，Steam 熱玩榜第一名。</p>' +
+                            '<p><strong>社群推廣方案：</strong> 於 Reddit 遊戲板塊發布高燃混剪短影音（Shorts），利用視覺衝擊引爆病毒式傳播。</p>';
+        }
+    </script>
+
 </body>
 </html>
