@@ -177,15 +177,14 @@
     </div>
 
     <script>
-        // 🔒 100% 純淨且完全正確的金鑰長字串（由 Python 核對字數完全一致）
-        const MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0.Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA"; 
+        const MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmBe-whMak3mOmmOZUMaKtLA"; 
         const MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         const userAlias = "game_creator_session_001";
 
         let gameWeights = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
 
         async function askMindsAgent(e, type) {
-            if(e) { e.preventDefault(); } // 徹底阻斷刷新
+            if(e) { e.preventDefault(); }
             
             const gameInput = document.getElementById('gameInput').value;
             const mindsBox = document.getElementById('mindsBox');
@@ -210,7 +209,7 @@
                 mindsContent.innerHTML = data.reply || data.text || data.message || "Minds Agent 響應成功！";
 
             } catch (error) {
-                // 💎 當你的 Mind Offline 時，立刻啟動備用模擬大腦！100% 完美回顯布丁的毒舌與標題規範！
+                // 💎 當你的 Mind Offline 時，無縫發動你最愛的虛擬大腦！100% 亮出布丁的幽默毒舌和標題規範！
                 setTimeout(function() {
                     loadingText.style.display = 'none';
                     mindsBox.style.display = 'block';
@@ -228,3 +227,8 @@
 `• <strong>行動呼籲 (CTA)：</strong> "不想再當跪地死掉的菜鳥？立刻按讚並訂閱我的頻道，下期帶你用冷門神裝強行通關最高難度！"\n\n` +
 `<strong>🔥 【布丁規範：YouTube 3種風格爆款標題】</strong>\n` +
 `<div class="style-block"><span class="style-共鳴">【情緒共鳴】：</span> 玩《${game}》差點玩到摔鍵盤！這款遊戲設計師真的太折磨人了...</div>\n` +
+`<div class="style-block"><span class="style-逆向">【權威逆向】：</span> 大家都說《${game}》是年度神作，但我玩了20小時發現了這3個致命缺點！</div>\n` +
+`<div class="style-block"><span class="style-數字">【數字勾引】：</span> 僅靠 1 個冷門神裝！我竟然強行通關了《${game}》最高難度！</div>`;
+                    } else {
+                        mindsContent.innerHTML = `
+<div class="weight-status">🔍 <strong>[讀取跨頁面記憶]</strong> 優先推薦 <code>game_weights</code> 最高類型。目前：<strong>魂系 (${gameWeights["魂系"].toFixed(1)})</strong></div>\n` +
