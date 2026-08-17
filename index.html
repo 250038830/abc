@@ -197,67 +197,66 @@
     }
 
     function generateAlias() {
-        var timestamp = Date.now();
-        var random = Math.random().toString(36).substring(2, 10);
-        return "webapp:thread-" + timestamp + "-" + random;
+    // ✅ 用你網頁端當前的 alias（從抓包獲取）
+    return "webapp:thread-1786952803988-6ka4jx";
+}
+
+function callMinds(prompt, onSuccess, onFail) {
+    if (!HAS_PROXY) {
+        console.log("⚠️ 未配置代理，Minds 無法調用");
+        onFail("proxy_not_configured");
+        return;
     }
 
-    function callMinds(prompt, onSuccess, onFail) {
-        if (!HAS_PROXY) {
-            console.log("⚠️ 未配置代理，Minds 無法調用");
-            onFail("proxy_not_configured");
-            return;
-        }
+    console.log("🤖 通過 Worker 調用 Minds API...");
+    console.log("📝 Prompt:", prompt.substring(0, 200) + "...");
 
-        console.log("🤖 通過 Worker 調用 Minds API...");
-        console.log("📝 Prompt:", prompt.substring(0, 200) + "...");
+    var alias = generateAlias();
+    var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
 
-        var alias = generateAlias();
-        var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
-
-        fetch(PROXY_BASE + "/minds", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                // ✅ 改：用 X-Auth-Token 傳遞 token
-                "X-Auth-Token": MINDS_KEY
-            },
-            body: JSON.stringify({ 
-                mindId: MIND_ID,
-                alias: alias, 
-                messageText: messageText 
-            })
+    fetch(PROXY_BASE + "/minds", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Auth-Token": MINDS_KEY
+        },
+        body: JSON.stringify({ 
+            mindId: MIND_ID,
+            alias: alias, 
+            messageText: messageText 
         })
-        .then(function(r) {
-            console.log("📡 Minds Worker 響應狀態:", r.status);
-            return r.text().then(function(text) {
-                console.log("📡 Minds 返回原始內容:", text.substring(0, 500));
-                if (!r.ok) {
-                    throw new Error("HTTP " + r.status + ": " + text);
-                }
-                try {
-                    return JSON.parse(text);
-                } catch(e) {
-                    return { raw: text };
-                }
-            });
-        })
-        .then(function(data) {
-            console.log("📡 Minds 返回數據:", JSON.stringify(data).substring(0, 500));
-            var text = data.reply || data.text || data.message || data.output || data.messageText || data.content || data.response || data.raw || "";
-            if (text) {
-                console.log("✅ Minds API 調用成功，內容長度:", text.length);
-                onSuccess(text);
-            } else {
-                console.warn("⚠️ Minds 返回內容為空");
-                onFail("empty_response");
+    })
+    .then(function(r) {
+        console.log("📡 Minds Worker 響應狀態:", r.status);
+        return r.text().then(function(text) {
+            console.log("📡 Minds 返回原始內容:", text.substring(0, 500));
+            if (!r.ok) {
+                throw new Error("HTTP " + r.status + ": " + text);
             }
-        })
-        .catch(function(e) {
-            console.warn("⚠️ Minds Worker 調用失敗:", e.message);
-            onFail("minds_offline");
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                return { raw: text };
+            }
         });
-    }
+    })
+    .then(function(data) {
+        console.log("📡 Minds 返回數據:", JSON.stringify(data).substring(0, 500));
+        var text = data.reply || data.text || data.message || data.output || data.messageText || data.content || data.response || data.raw || "";
+        if (text) {
+            console.log("✅ Minds API 調用成功，內容長度:", text.length);
+            onSuccess(text);
+        } else {
+            console.warn("⚠️ Minds 返回內容為空");
+            onFail("empty_response");
+        }
+    })
+    .catch(function(e) {
+        console.warn("⚠️ Minds Worker 調用失敗:", e.message);
+        onFail("minds_offline");
+    });
+}
+
 
     function onHotClick() {
         console.log("🎯 熱門榜按鈕被點擊");
