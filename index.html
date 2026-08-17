@@ -10,15 +10,15 @@
         h1 { font-size: 26px; font-weight: 800; margin-top: 0; margin-bottom: 8px; background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .desc { font-size: 14px; color: #9ca3af; margin-bottom: 28px; line-height: 1.5; }
         .label { display: block; font-size: 13px; font-weight: 600; color: #9fa8b6; margin-bottom: 8px; text-align: left; }
-        .input-field { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 14px; color: white; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; outline: none; }
-        select.input-field { cursor: pointer; }
-        .btn { width: 100%; background-color: #2563eb; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 12px; box-sizing: border-box; transition: background 0.2s; }
-        .btn:hover { background-color: #1d4ed8; }
-        .btn-upcoming { background-color: #a855f7; }
-        .btn-upcoming:hover { background-color: #9333ea; }
-        .btn-auto { background-color: #10b981; }
-        .btn-auto:hover { background-color: #059669; }
+        select.input-field { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 14px; color: white; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; outline: none; cursor: pointer; }
+        .btn { width: 100%; color: white; border: none; border-radius: 10px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 12px; box-sizing: border-box; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-hot { background: linear-gradient(135deg, #ef4444, #f97316); }
+        .btn-hot:hover { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); }
+        .btn-upcoming { background: linear-gradient(135deg, #a855f7, #6366f1); }
+        .btn-upcoming:hover { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4); }
         .hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin-top: -4px; margin-bottom: 24px; text-align: left; }
+        .btn-hint { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 4px; font-weight: 400; }
         .output-box { display: none; background: #070b14; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8); text-align: left; }
         .output-header { display: flex; align-items: center; color: #38bdf8; font-weight: 700; font-size: 11px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 12px; }
         .output-badge { background: rgba(3, 105, 161, 0.4); color: #38bdf8; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
@@ -33,16 +33,15 @@
         .loading { color: #eab308; font-weight: bold; display: none; margin-top: 15px; text-align: center; font-size: 14px; }
         .steam-tag { display: inline-block; background: linear-gradient(135deg, #1b2838, #2a475e); color: #66c0f4; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #66c0f4; }
         .upcoming-tag { display: inline-block; background: linear-gradient(135deg, #581c87, #7e22ce); color: #e9d5ff; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #a855f7; }
+        .divider { display: flex; align-items: center; margin: 20px 0; color: #4b5563; font-size: 12px; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #1e293b; }
+        .divider span { padding: 0 12px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Viral Game Content Agent</h1>
         <div class="desc">Track 1: Audience Growth. Powered 100% by Minds API.</div>
-
-        <label class="label">遊戲偏好（可選，留空自動推薦）</label>
-        <input type="text" id="gameInput" class="input-field" placeholder="e.g. RPG、動作、恐怖... 留空由 AI 全自動搜尋">
-        <div class="hint">輸入你感興趣的遊戲類型，或留空讓 AI 自動找 Steam 即將推出的討論度最高遊戲</div>
 
         <label class="label">內容風格</label>
         <select id="styleSelect" class="input-field">
@@ -59,9 +58,17 @@
         </select>
         <div class="hint">根據你實際影片數據反饋，影響後續推薦優先級</div>
 
-        <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">🚀 尋找即將推出的熱門遊戲</button>
-        <button type="button" class="btn btn-auto" onclick="onAutoClick()">🔥 當前 Steam 熱門榜</button>
-        <div class="hint">即將推出：找未來上市的高討論度遊戲 | 熱門榜：找現在最多人玩的遊戲</div>
+        <div class="divider"><span>選擇搜尋模式</span></div>
+
+        <button type="button" class="btn btn-hot" onclick="onHotClick()">
+            🔥 當前 Steam 熱門榜
+            <div class="btn-hint">抓現在最多人玩的遊戲，跟熱度蹭話題</div>
+        </button>
+
+        <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
+            🚀 即將推出的熱門遊戲
+            <div class="btn-hint">找未來上市的高討論度遊戲，提前佈局搶流量</div>
+        </button>
 
         <div id="loading" class="loading">⏳ 處理中...</div>
 
@@ -113,11 +120,13 @@
     ];
 
     var FALLBACK_UPCOMING = [
-        { name: "GTA 6", hype: "極高", reason: "R星續作，全球玩家期待" },
-        { name: "艾爾登法環：黑夜君臨", hype: "高", reason: "FromSoftware 續作，魂系愛好者期待" },
-        { name: "魔物獵人 荒野", hype: "高", reason: "卡普空大作，系列粉絲眾多" },
-        { name: "死亡擱淺 2", hype: "中高", reason: "小島秀夫新作，討論度高" },
-        { name: "沉默之丘 2 重製版", hype: "中", reason: "經典恐怖遊戲重製" }
+        { name: "GTA 6", hype: "極高", reason: "R星續作，全球玩家瘋狂期待，預計2025-2026發售" },
+        { name: "艾爾登法環：黑夜君臨", hype: "高", reason: "FromSoftware 續作，魂系愛好者高度期待" },
+        { name: "魔物獵人 荒野", hype: "高", reason: "卡普空大作，系列粉絲眾多，2025年發售" },
+        { name: "死亡擱淺 2", hype: "中高", reason: "小島秀夫新作，討論度持續升溫" },
+        { name: "沉默之丘 2 重製版", hype: "中", reason: "經典恐怖遊戲重製，粉絲期待已久" },
+        { name: "戰神：諸神黃昏 PC版", hype: "中高", reason: "索尼獨佔移植PC，PC玩家期待" },
+        { name: "最終幻想 7 重生", hype: "中", reason: "FF7重製系列第二章，JRPG粉絲期待" }
     ];
 
     // === 工具函數 ===
@@ -174,45 +183,7 @@
         document.getElementById("outputContent").innerHTML = html;
     }
 
-    // === 生成內容（fallback） ===
-    function genWeightBadge(info) {
-        if (info.feedback === "up") return "📈 <strong>[影片表現反饋：好]</strong> <code>" + info.type + "</code> 權重 +0.5 → <strong>" + info.weight.toFixed(1) + "</strong>";
-        if (info.feedback === "down") return "📉 <strong>[影片表現反饋：差]</strong> <code>" + info.type + "</code> 權重 -0.3 → <strong>" + info.weight.toFixed(1) + "</strong>";
-        return "➖ <strong>[未調整權重]</strong> <code>" + info.type + "</code> 維持 <strong>" + info.weight.toFixed(1) + "</strong>";
-    }
-
-    function genWeightStyle(fb) {
-        if (fb === "down") return "border-color: #475569; color: #94a3b8;";
-        if (fb === "none") return "border-color: #374151; color: #9ca3af;";
-        return "";
-    }
-
-    function genHighContent(game, badge, wStyle) {
-        var h = '<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n';
-        h += '<strong>🎙️ 【布丁規範：幽默毒舌爆款講稿】</strong>\n';
-        h += '• <strong>0-30秒 (Hook 痛點)：</strong> "你是不是也跟我一樣，興沖沖打開《' + game + '》，結果開局被路邊小兵連死五次，差點直接砸爛鍵盤摔滑鼠？今天就來扒光這款遊戲折磨人的真相！"\n';
-        h += '• <strong>機制拆解：</strong> 深入分析其動作判定、打擊硬直與不講武德的關卡數值設定，看透這款遊戲是怎麼在核心機制上狠狠洗刷玩家的。\n';
-        h += '• <strong>行動呼籲 (CTA)：</strong> "不想再當跪地死掉的菜鳥？立刻按讚並訂閱我的頻道，下期帶你用冷門神裝強行通關最高難度！"\n\n';
-        h += '<strong>🔥 【布丁規範：YouTube 3種風格爆款標題】</strong>\n';
-        h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 玩《' + game + '》差點玩到摔鍵盤！這款遊戲設計師真的太折磨人了...</div>\n';
-        h += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 大家都說《' + game + '》是年度神作，但我玩了20小時發現了這3個致命缺點！</div>\n';
-        h += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 僅靠 1 個冷門神裝！我竟然強行通關了《' + game + '》最高難度！</div>';
-        return h;
-    }
-
-    function genLowContent(game, badge, wStyle) {
-        var h = '<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n';
-        h += '<strong>🎙️ 【冷門挖掘：深度分析講稿】</strong>\n';
-        h += '• <strong>0-30秒 (Hook 好奇點)：</strong> "你知道《' + game + '》為什麼叫好不叫座嗎？明明品質過關，卻為什麼遲遲火不起來？今天來深度拆解這款被低估的冷門寶藏。"\n';
-        h += '• <strong>冷門解析：</strong> 從傳播門檻、觀賞門檻、遊戲節奏三個角度，分析為什麼這款遊戲內容難以出爆款，以及它真正的核心魅力在哪裡。\n';
-        h += '• <strong>行動呼籲 (CTA)：</strong> "如果你也喜歡這類小眾精品，記得訂閱我的頻道，專門挖掘那些被埋沒的好遊戲！"\n\n';
-        h += '<strong>🧊 【冷門路線：YouTube 3種風格標題】</strong>\n';
-        h += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 為什麼《' + game + '》品質這麼好，卻沒人看？背後原因很殘酷...</div>\n';
-        h += '<div class="title-block t-gray"><span>【反向解析】：</span> 全網都在做爆款遊戲，但我偏要聊聊這款「撲街」的冷門佳作</div>\n';
-        h += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + game + '》為什麼火不起來？3個被忽視的傳播致命傷</div>';
-        return h;
-    }
-
+    // === Fallback 內容生成 ===
     function genAutoContent(gameData, isHigh) {
         var srcLabel = gameData.source === "fallback" ? "FALLBACK" : "STEAM LIVE";
         var srcColor = gameData.source === "fallback" ? "#f59e0b" : "#66c0f4";
@@ -240,14 +211,14 @@
         return h;
     }
 
-    function genUpcomingFallback(preference, isHigh) {
+    function genUpcomingFallback(isHigh) {
         var game = FALLBACK_UPCOMING[Math.floor(Math.random() * FALLBACK_UPCOMING.length)];
         var styleLabel = isHigh ? "爆款" : "冷門分析";
         var icon = isHigh ? "🔥" : "🧊";
         var top = getTopWeight();
 
         var h = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
-        h += '🚀 <strong>[Steam 即將推出]</strong> 《' + game.name + '》 | 討論度: ' + game.hype + ' | ' + game.reason;
+        h += '🚀 <strong>[Steam 即將推出]</strong> 《' + game.name + '》 | 討論度: ' + game.hype;
         h += '<span class="upcoming-tag">FALLBACK</span></div>\n';
         h += '<div class="status-bar">🔍 <strong>[AI 推薦]</strong> 遊戲類型: <strong>' + detectType(game.name) + '</strong> | 權重最高: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n';
         h += '<strong>🤖 Upcoming AI Pick (' + styleLabel + '): 《' + game.name + '》</strong>\n';
@@ -256,7 +227,7 @@
         h += '<strong>' + icon + ' 【3 種' + styleLabel + '標題】</strong>\n';
 
         if (isHigh) {
-            h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 等了5年！《' + game.name + '》終於要來了，與其期待不如先看這裡...</div>\n';
+            h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 等了這麼久！《' + game.name + '》終於要來了，與其期待不如先看這裡...</div>\n';
             h += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 所有人都在吹《' + game.name + '》，但我發現了3個可能翻車的隱患！</div>\n';
             h += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 提前知道這 5 個細節！《' + game.name + '》上市當天你就是最懂的那個！</div>';
         } else {
@@ -399,58 +370,22 @@
 
     // === 按鈕事件 ===
 
-    // 🚀 即將推出的熱門遊戲
-    function onUpcomingClick() {
-        console.log("🎯 即將推出按鈕被點擊");
-        var preference = document.getElementById("gameInput").value || "";
+    // 🔥 當前 Steam 熱門榜
+    function onHotClick() {
+        console.log("🎯 熱門榜按鈕被點擊");
         var style = document.getElementById("styleSelect").value;
         var weight = document.getElementById("weightSelect").value;
-        var isHigh = style === "high";
-        var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
-
-        showLoading("🚀 正在搜尋 Steam 即將推出的高討論度遊戲...");
-
-        // 構建 prompt，讓 Minds 找即將推出的高討論度遊戲
-        var prefText = preference ? "（偏好：" + preference + "）" : "";
-        var prompt = "請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲" + prefText + "，";
-        prompt += "找出目前討論度最高、最有爆款潛力的1-3款遊戲。";
-        prompt += "對於每款遊戲，請提供：\n";
-        prompt += "1. 遊戲名稱和預計發售日期\n";
-        prompt += "2. 為什麼討論度高（社群熱度、期待值等）\n";
-        prompt += "3. 適合做什麼類型的影片內容\n";
-        prompt += "4. 按照" + styleLabel + "風格，生成3個YouTube爆款標題\n";
-        prompt += "5. 一個30秒的影片開場Hook講稿\n\n";
-        prompt += "請用繁體中文回答，格式要清晰，方便直接拿去做影片。";
-
-        callMinds(
-            prompt,
-            function(text) {
-                var top = getTopWeight();
-                var prefix = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
-                prefix += '🚀 <strong>[Steam 即將推出]</strong> AI 已搜尋高討論度遊戲';
-                if (preference) { prefix += ' | 偏好: ' + preference; }
-                prefix += '<span class="upcoming-tag">AI SEARCH</span></div>\n';
-                prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
-                showOutput(prefix + text);
-            },
-            function() {
-                setTimeout(function() {
-                    showOutput(genUpcomingFallback(preference, isHigh));
-                }, 800);
-            }
-        );
-    }
-
-    // 🔥 當前 Steam 熱門榜
-    function onAutoClick() {
-        console.log("🎯 Auto 按鈕被點擊");
-        var style = document.getElementById("styleSelect").value;
         var isHigh = style === "high";
         var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
 
         showLoading("🎮 正在從 Steam 抓取熱門遊戲...");
 
         fetchSteamGame(function(gameData) {
+            // 更新權重
+            if (weight !== "none") {
+                updateWeight(gameData.name, weight);
+            }
+
             showLoading("🤖 正在生成內容...");
             var prompt = "Steam 今日熱門遊戲《" + gameData.name + "》，請生成" + styleLabel + "的遊戲影片企劃與布丁規範標題。";
 
@@ -471,7 +406,45 @@
         });
     }
 
-    console.log("✅ 腳本全部加載成功！按鈕應該可以用了");
+    // 🚀 即將推出的熱門遊戲
+    function onUpcomingClick() {
+        console.log("🎯 即將推出按鈕被點擊");
+        var style = document.getElementById("styleSelect").value;
+        var weight = document.getElementById("weightSelect").value;
+        var isHigh = style === "high";
+        var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
+
+        showLoading("🚀 正在搜尋 Steam 即將推出的高討論度遊戲...");
+
+        var top = getTopWeight();
+        var prompt = "請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲，";
+        prompt += "找出目前討論度最高、最有爆款潛力的1-3款遊戲。\n\n";
+        prompt += "目前我的頻道權重最高的遊戲類型是「" + top.name + "」（權重值：" + top.weight.toFixed(1) + "），";
+        prompt += "請優先推薦這個類型的即將推出遊戲。\n\n";
+        prompt += "對於每款遊戲，請提供：\n";
+        prompt += "1. 遊戲名稱和預計發售日期\n";
+        prompt += "2. 為什麼討論度高（社群熱度、期待值、開發商背景等）\n";
+        prompt += "3. 適合做什麼類型的影片內容\n";
+        prompt += "4. 按照" + styleLabel + "風格，生成3個YouTube爆款標題\n";
+        prompt += "5. 一個30秒的影片開場Hook講稿\n\n";
+        prompt += "請用繁體中文回答，格式要清晰，方便直接拿去做影片。";
+
+        callMinds(
+            prompt,
+            function(text) {
+                var prefix = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
+                prefix += '🚀 <strong>[Steam 即將推出]</strong> AI 已搜尋高討論度遊戲';
+                prefix += '<span class="upcoming-tag">AI SEARCH</span></div>\n';
+                prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
+                showOutput(prefix + text);
+            },
+            function() {
+                setTimeout(function() { showOutput(genUpcomingFallback(isHigh)); }, 800);
+            }
+        );
+    }
+
+    console.log("✅ 腳本全部加載成功！兩個按鈕就緒");
     </script>
 </body>
 </html>
