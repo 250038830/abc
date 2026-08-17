@@ -36,17 +36,12 @@
         .divider { display: flex; align-items: center; margin: 20px 0; color: #4b5563; font-size: 12px; }
         .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #1e293b; }
         .divider span { padding: 0 12px; }
-        .proxy-status { font-size: 11px; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px; text-align: left; }
-        .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Viral Game Content Agent</h1>
         <div class="desc">Track 1: Audience Growth. Powered 100% by Minds API.</div>
-
-        <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 未配置代理，將使用離線數據（請在代碼中填入 YOUR_WORKER_URL）</div>
 
         <label class="label">內容風格</label>
         <select id="styleSelect" class="input-field">
@@ -89,25 +84,12 @@
     <script>
     console.log("0️⃣ 腳本開始加載...");
 
-    // ============================================
-    // 👇 把這裡換成你的 Cloudflare Worker URL
-    // ============================================
-    var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev/"; // 例如: https://my-proxy.abc.workers.dev
-    // ============================================
-
     var KEY_PART1 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0";
     var KEY_PART2 = ".eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0";
     var KEY_PART3 = ".Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
     var MINDS_KEY = KEY_PART1 + KEY_PART2 + KEY_PART3;
     var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
     var userAlias = "game_creator_session_001";
-
-    // 檢查代理是否配置
-    var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
-    if (HAS_PROXY) {
-        document.getElementById("proxyStatus").className = "proxy-status proxy-ok";
-        document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
-    }
 
     var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
     var gameWeights = {};
@@ -243,19 +225,89 @@
         return h;
     }
 
-    // === 通過代理獲取 Steam 數據 ===
-    function fetchSteamGame(callback) {
-        if (!HAS_PROXY) {
-            console.log("⚠️ 未配置代理，直接用 fallback");
-            var fb = FALLBACK_GAMES[Math.floor(Math.random() * FALLBACK_GAMES.length)];
-            callback({ name: fb.name, players: fb.players, peak: "N/A", source: "fallback", type: fb.type });
-            return;
+    // ============================================
+    // 🔧 修復：增強 Steam 數據解析
+    // ============================================
+    function extractGameName(obj) {
+        // 嘗試各種可能的字段名
+        if (obj.name) return obj.name;
+        if (obj.app_name) return obj.app_name;
+        if (obj.title) return obj.title;
+        if (obj.game_name) return obj.game_name;
+        if (obj.appid) return "App " + obj.appid;
+        return null;
+    }
+
+    function extractPlayers(obj) {
+        if (obj.concurrent_in_game) return obj.concurrent_in_game;
+        if (obj.players) return obj.players;
+        if (obj.current) return obj.current;
+        if (obj.in_game) return obj.in_game;
+        return 0;
+    }
+
+    function extractPeak(obj) {
+        if (obj.peak_in_game) return obj.peak_in_game;
+        if (obj.peak) return obj.peak;
+        if (obj.max_players) return obj.max_players;
+        return 0;
+    }
+
+    function findRanksArray(obj) {
+        // 遞歸尋找包含遊戲列表的數組
+        if (!obj || typeof obj !== "object") return null;
+
+        // 直接檢查常見路徑
+        if (obj.response && obj.response.ranks && Array.isArray(obj.response.ranks)) return obj.response.ranks;
+        if (obj.ranks && Array.isArray(obj.ranks)) return obj.ranks;
+        if (obj.data && obj.data.ranks && Array.isArray(obj.data.ranks)) return obj.data.ranks;
+        if (obj.games && Array.isArray(obj.games)) return obj.games;
+        if (obj.list && Array.isArray(obj.list)) return obj.list;
+        if (obj.apps && Array.isArray(obj.apps)) return obj.apps;
+
+        // 檢查 contents 字段（代理可能包裝）
+        if (obj.contents) {
+            try {
+                var inner = typeof obj.contents === "string" ? JSON.parse(obj.contents) : obj.contents;
+                var found = findRanksArray(inner);
+                if (found) return found;
+            } catch(e) {}
         }
 
+        // 檢查 data 字段
+        if (obj.data) {
+            try {
+                var inner2 = typeof obj.data === "string" ? JSON.parse(obj.data) : obj.data;
+                var found2 = findRanksArray(inner2);
+                if (found2) return found2;
+            } catch(e) {}
+        }
+
+        // 遞歸搜索所有字段
+        for (var key in obj) {
+            if (obj[key] && typeof obj[key] === "object") {
+                var result = findRanksArray(obj[key]);
+                if (result) return result;
+            }
+        }
+
+        return null;
+    }
+
+    function fetchSteamGame(callback) {
+        var url = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
         var done = false;
+        var proxyIndex = 0;
+
+        var proxies = [
+            { url: "https://corsproxy.io/?url=", name: "corsproxy.io" },
+            { url: "https://api.allorigins.win/raw?url=", name: "allorigins" },
+            { url: "https://api.codetabs.com/v1/proxy?quest=", name: "codetabs" }
+        ];
+
         var timer = setTimeout(function() {
             if (!done) { done = true; useFallback(); }
-        }, 10000);
+        }, 15000);
 
         function finish(data) {
             if (done) return;
@@ -265,53 +317,102 @@
         }
 
         function useFallback() {
+            console.log("⚠️ 使用 fallback 遊戲列表");
             var fb = FALLBACK_GAMES[Math.floor(Math.random() * FALLBACK_GAMES.length)];
             finish({ name: fb.name, players: fb.players, peak: "N/A", source: "fallback", type: fb.type });
         }
 
-        fetch(PROXY_BASE + "/steam")
-            .then(function(r) {
-                if (!r.ok) throw new Error("HTTP " + r.status);
-                return r.json();
-            })
-            .then(function(d) {
-                var ranks = d.response && d.response.ranks ? d.response.ranks : null;
-                if (!ranks || ranks.length === 0) { useFallback(); return; }
-
-                var count = Math.min(10, ranks.length);
-                var p = ranks[Math.floor(Math.random() * count)];
-
-                if (!p || !p.name) { useFallback(); return; }
-
-                console.log("✅ 代理獲取 Steam 數據成功:", p.name);
-                finish({
-                    name: p.name,
-                    players: formatNum(p.concurrent_in_game),
-                    peak: formatNum(p.peak_in_game),
-                    source: "proxy",
-                    type: detectType(p.name)
-                });
-            })
-            .catch(function(e) {
-                console.warn("⚠️ 代理獲取 Steam 失敗:", e.message);
+        function tryNextProxy() {
+            if (proxyIndex >= proxies.length) {
                 useFallback();
-            });
-    }
+                return;
+            }
 
-    // === 通過代理調用 Minds API ===
-    function callMinds(prompt, onSuccess, onFail) {
-        if (!HAS_PROXY) {
-            console.log("⚠️ 未配置代理，Minds API 無法調用");
-            onFail();
-            return;
+            var proxy = proxies[proxyIndex];
+            var proxyUrl = proxy.url + encodeURIComponent(url);
+            console.log("嘗試代理 " + (proxyIndex + 1) + "/" + proxies.length + ":", proxy.name);
+
+            fetch(proxyUrl)
+                .then(function(r) {
+                    if (!r.ok) throw new Error("HTTP " + r.status);
+                    return r.text();
+                })
+                .then(function(text) {
+                    console.log("代理 " + proxy.name + " 返回數據長度:", text.length);
+                    console.log("代理 " + proxy.name + " 數據前200字:", text.substring(0, 200));
+
+                    var d;
+                    try {
+                        d = JSON.parse(text);
+                    } catch(e) {
+                        console.warn("⚠️ JSON 解析失敗，嘗試提取...");
+                        // 嘗試從文本中提取 JSON
+                        var start = text.indexOf("{");
+                        var end = text.lastIndexOf("}");
+                        if (start >= 0 && end > start) {
+                            try {
+                                d = JSON.parse(text.substring(start, end + 1));
+                            } catch(e2) {
+                                throw new Error("JSON 解析失敗");
+                            }
+                        } else {
+                            throw new Error("JSON 解析失敗");
+                        }
+                    }
+
+                    // 🔧 增強解析：遞歸尋找 ranks 數組
+                    var ranks = findRanksArray(d);
+                    console.log("解析到的 ranks 數組長度:", ranks ? ranks.length : 0);
+
+                    if (!ranks || ranks.length === 0) {
+                        console.warn("⚠️ 未找到 ranks 數組，數據結構:", Object.keys(d));
+                        proxyIndex++;
+                        tryNextProxy();
+                        return;
+                    }
+
+                    // 從前10名中隨機選一個
+                    var count = Math.min(10, ranks.length);
+                    var p = ranks[Math.floor(Math.random() * count)];
+
+                    console.log("選中的遊戲對象:", JSON.stringify(p));
+
+                    // 🔧 增強：嘗試多種字段名獲取遊戲名
+                    var gameName = extractGameName(p);
+                    var players = extractPlayers(p);
+                    var peak = extractPeak(p);
+
+                    if (!gameName) {
+                        console.warn("⚠️ 無法從對象中提取遊戲名，字段:", Object.keys(p));
+                        proxyIndex++;
+                        tryNextProxy();
+                        return;
+                    }
+
+                    console.log("✅ 代理 " + proxy.name + " 成功，選中遊戲:", gameName);
+                    finish({
+                        name: gameName,
+                        players: formatNum(players),
+                        peak: formatNum(peak),
+                        source: "steam-proxy",
+                        type: detectType(gameName)
+                    });
+                })
+                .catch(function(e) {
+                    console.warn("⚠️ 代理 " + proxy.name + " 失敗:", e.message);
+                    proxyIndex++;
+                    tryNextProxy();
+                });
         }
 
-        fetch(PROXY_BASE + "/minds", {
+        tryNextProxy();
+    }
+
+    // === Minds API ===
+    function callMinds(prompt, onSuccess, onFail) {
+        fetch("https://hellominds.ai", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Api-Key": MINDS_KEY
-            },
+            headers: { "X-Api-Key": MINDS_KEY, "Content-Type": "application/json" },
             body: JSON.stringify({ mindId: MIND_ID, alias: userAlias, message: prompt })
         })
         .then(function(r) { return r.json(); })
@@ -320,7 +421,7 @@
             if (text) { onSuccess(text); } else { onFail(); }
         })
         .catch(function(e) {
-            console.warn("⚠️ Minds 代理調用失敗:", e.message);
+            console.warn("⚠️ Minds API 失敗:", e.message);
             onFail();
         });
     }
@@ -398,7 +499,7 @@
         );
     }
 
-    console.log("✅ 腳本加載完成，代理狀態：" + (HAS_PROXY ? "已配置" : "未配置"));
+    console.log("✅ 腳本加載完成（修復版）");
     </script>
 </body>
 </html>
