@@ -230,7 +230,7 @@
                 "Content-Type": "application/json",
                 "X-Api-Key": MINDS_KEY
             },
-            body: JSON.stringify({ mindId: MIND_ID, alias: userAlias, message: prompt })
+            body: JSON.stringify({ alias: userAlias, messageText: prompt })
         })
         .then(function(r) {
             console.log("📡 Minds Worker 響應狀態:", r.status);
