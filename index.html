@@ -14,6 +14,8 @@
         select.input-field { cursor: pointer; }
         .btn { width: 100%; background-color: #2563eb; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 12px; box-sizing: border-box; transition: background 0.2s; }
         .btn:hover { background-color: #1d4ed8; }
+        .btn-upcoming { background-color: #a855f7; }
+        .btn-upcoming:hover { background-color: #9333ea; }
         .btn-auto { background-color: #10b981; }
         .btn-auto:hover { background-color: #059669; }
         .hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin-top: -4px; margin-bottom: 24px; text-align: left; }
@@ -30,6 +32,7 @@
         .status-bar { font-size: 12px; color: #38bdf8; background: #111827; padding: 6px 12px; border-radius: 6px; margin-bottom: 14px; border: 1px solid #1e293b; display: inline-block; }
         .loading { color: #eab308; font-weight: bold; display: none; margin-top: 15px; text-align: center; font-size: 14px; }
         .steam-tag { display: inline-block; background: linear-gradient(135deg, #1b2838, #2a475e); color: #66c0f4; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #66c0f4; }
+        .upcoming-tag { display: inline-block; background: linear-gradient(135deg, #581c87, #7e22ce); color: #e9d5ff; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #a855f7; }
     </style>
 </head>
 <body>
@@ -37,8 +40,9 @@
         <h1>Viral Game Content Agent</h1>
         <div class="desc">Track 1: Audience Growth. Powered 100% by Minds API.</div>
 
-        <label class="label">I want to cover this game (leave empty to let the Agent choose)</label>
-        <input type="text" id="gameInput" class="input-field" placeholder="e.g. Black Myth: Wukong, Cyberpunk 2077...">
+        <label class="label">遊戲偏好（可選，留空自動推薦）</label>
+        <input type="text" id="gameInput" class="input-field" placeholder="e.g. RPG、動作、恐怖... 留空由 AI 全自動搜尋">
+        <div class="hint">輸入你感興趣的遊戲類型，或留空讓 AI 自動找 Steam 即將推出的討論度最高遊戲</div>
 
         <label class="label">內容風格</label>
         <select id="styleSelect" class="input-field">
@@ -53,11 +57,11 @@
             <option value="down">📉 表現差（權重 -0.3）</option>
             <option value="none">➖ 不調整</option>
         </select>
-        <div class="hint">根據你實際影片數據反饋，影響後續 Auto 推薦優先級</div>
+        <div class="hint">根據你實際影片數據反饋，影響後續推薦優先級</div>
 
-        <button type="button" class="btn" onclick="onGenerateClick()">Generate Plan for Game</button>
-        <button type="button" class="btn btn-auto" onclick="onAutoClick()">Get Today's Viral Pick (Auto)</button>
-        <div class="hint">Auto 模式從 Steam 熱門榜實時抓取</div>
+        <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">🚀 尋找即將推出的熱門遊戲</button>
+        <button type="button" class="btn btn-auto" onclick="onAutoClick()">🔥 當前 Steam 熱門榜</button>
+        <div class="hint">即將推出：找未來上市的高討論度遊戲 | 熱門榜：找現在最多人玩的遊戲</div>
 
         <div id="loading" class="loading">⏳ 處理中...</div>
 
@@ -73,7 +77,6 @@
     <script>
     console.log("0️⃣ 腳本開始加載...");
 
-    // API Key 拆成小段拼接
     var KEY_PART1 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0";
     var KEY_PART2 = ".eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0";
     var KEY_PART3 = ".Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
@@ -83,7 +86,6 @@
 
     console.log("1️⃣ API Key 拼接完成，長度：" + MINDS_KEY.length);
 
-    // 權重系統
     var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
     var gameWeights = {};
 
@@ -108,6 +110,14 @@
         { name: "GTA 5", players: "150k", type: "動作" },
         { name: "Counter-Strike 2", players: "1.2M", type: "射擊" },
         { name: "爐石戰記", players: "45k", type: "卡牌" }
+    ];
+
+    var FALLBACK_UPCOMING = [
+        { name: "GTA 6", hype: "極高", reason: "R星續作，全球玩家期待" },
+        { name: "艾爾登法環：黑夜君臨", hype: "高", reason: "FromSoftware 續作，魂系愛好者期待" },
+        { name: "魔物獵人 荒野", hype: "高", reason: "卡普空大作，系列粉絲眾多" },
+        { name: "死亡擱淺 2", hype: "中高", reason: "小島秀夫新作，討論度高" },
+        { name: "沉默之丘 2 重製版", hype: "中", reason: "經典恐怖遊戲重製" }
     ];
 
     // === 工具函數 ===
@@ -230,7 +240,34 @@
         return h;
     }
 
-    // === Steam API（修復 CORS + 數據格式問題）===
+    function genUpcomingFallback(preference, isHigh) {
+        var game = FALLBACK_UPCOMING[Math.floor(Math.random() * FALLBACK_UPCOMING.length)];
+        var styleLabel = isHigh ? "爆款" : "冷門分析";
+        var icon = isHigh ? "🔥" : "🧊";
+        var top = getTopWeight();
+
+        var h = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
+        h += '🚀 <strong>[Steam 即將推出]</strong> 《' + game.name + '》 | 討論度: ' + game.hype + ' | ' + game.reason;
+        h += '<span class="upcoming-tag">FALLBACK</span></div>\n';
+        h += '<div class="status-bar">🔍 <strong>[AI 推薦]</strong> 遊戲類型: <strong>' + detectType(game.name) + '</strong> | 權重最高: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n';
+        h += '<strong>🤖 Upcoming AI Pick (' + styleLabel + '): 《' + game.name + '》</strong>\n';
+        h += '<p>• <strong>為什麼推薦：</strong> ' + game.reason + '</p>\n';
+        h += '<p>• <strong>Audience Growth 潛力：</strong> 未上市先轟動，提前做內容可以搶佔搜索流量！</p>\n\n';
+        h += '<strong>' + icon + ' 【3 種' + styleLabel + '標題】</strong>\n';
+
+        if (isHigh) {
+            h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 等了5年！《' + game.name + '》終於要來了，與其期待不如先看這裡...</div>\n';
+            h += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 所有人都在吹《' + game.name + '》，但我發現了3個可能翻車的隱患！</div>\n';
+            h += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 提前知道這 5 個細節！《' + game.name + '》上市當天你就是最懂的那個！</div>';
+        } else {
+            h += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 大家都在等《' + game.name + '》，但這款遊戲真的適合你嗎？</div>\n';
+            h += '<div class="title-block t-gray"><span>【反向解析】：</span> 《' + game.name + '》 hype 這麼高，會不會又是一場空歡喜？</div>\n';
+            h += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + game.name + '》為什麼還沒上市就這麼紅？3個關鍵原因</div>';
+        }
+        return h;
+    }
+
+    // === Steam API（當前熱門榜）===
     function fetchSteamGame(callback) {
         var url = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
         var done = false;
@@ -261,7 +298,6 @@
 
         function parseSteamData(d) {
             var ranks = null;
-            
             if (d.response && d.response.ranks) {
                 ranks = d.response.ranks;
             }
@@ -281,7 +317,6 @@
                     }
                 } catch(e) {}
             }
-            
             return ranks;
         }
 
@@ -312,8 +347,7 @@
                     var ranks = parseSteamData(d);
                     
                     if (!ranks || ranks.length === 0) {
-                        console.warn("⚠️ 代理 " + proxy.name + " 數據格式不對，ranks 為空");
-                        console.log("返回數據預覽:", text.substring(0, 200));
+                        console.warn("⚠️ 代理 " + proxy.name + " 數據格式不對");
                         proxyIndex++;
                         tryNextProxy();
                         return;
@@ -364,34 +398,50 @@
     }
 
     // === 按鈕事件 ===
-    function onGenerateClick() {
-        console.log("🎯 Generate 按鈕被點擊");
-        var game = document.getElementById("gameInput").value || "黑神話：悟空";
+
+    // 🚀 即將推出的熱門遊戲
+    function onUpcomingClick() {
+        console.log("🎯 即將推出按鈕被點擊");
+        var preference = document.getElementById("gameInput").value || "";
         var style = document.getElementById("styleSelect").value;
         var weight = document.getElementById("weightSelect").value;
         var isHigh = style === "high";
         var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
 
-        showLoading("🤖 正在生成內容...");
+        showLoading("🚀 正在搜尋 Steam 即將推出的高討論度遊戲...");
+
+        // 構建 prompt，讓 Minds 找即將推出的高討論度遊戲
+        var prefText = preference ? "（偏好：" + preference + "）" : "";
+        var prompt = "請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲" + prefText + "，";
+        prompt += "找出目前討論度最高、最有爆款潛力的1-3款遊戲。";
+        prompt += "對於每款遊戲，請提供：\n";
+        prompt += "1. 遊戲名稱和預計發售日期\n";
+        prompt += "2. 為什麼討論度高（社群熱度、期待值等）\n";
+        prompt += "3. 適合做什麼類型的影片內容\n";
+        prompt += "4. 按照" + styleLabel + "風格，生成3個YouTube爆款標題\n";
+        prompt += "5. 一個30秒的影片開場Hook講稿\n\n";
+        prompt += "請用繁體中文回答，格式要清晰，方便直接拿去做影片。";
 
         callMinds(
-            "生成 " + game + " 的" + styleLabel + "企劃與布丁規範標題",
+            prompt,
             function(text) {
-                var info = updateWeight(game, weight);
-                var badge = genWeightBadge(info);
-                var wStyle = genWeightStyle(info.feedback);
-                showOutput('<div class="status-bar" style="' + wStyle + '">' + badge + '</div>\n\n' + text);
+                var top = getTopWeight();
+                var prefix = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
+                prefix += '🚀 <strong>[Steam 即將推出]</strong> AI 已搜尋高討論度遊戲';
+                if (preference) { prefix += ' | 偏好: ' + preference; }
+                prefix += '<span class="upcoming-tag">AI SEARCH</span></div>\n';
+                prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
+                showOutput(prefix + text);
             },
             function() {
-                var info = updateWeight(game, weight);
-                var badge = genWeightBadge(info);
-                var wStyle = genWeightStyle(info.feedback);
-                var html = isHigh ? genHighContent(game, badge, wStyle) : genLowContent(game, badge, wStyle);
-                setTimeout(function() { showOutput(html); }, 800);
+                setTimeout(function() {
+                    showOutput(genUpcomingFallback(preference, isHigh));
+                }, 800);
             }
         );
     }
 
+    // 🔥 當前 Steam 熱門榜
     function onAutoClick() {
         console.log("🎯 Auto 按鈕被點擊");
         var style = document.getElementById("styleSelect").value;
