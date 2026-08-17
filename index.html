@@ -90,10 +90,9 @@
 
     var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
 
-    var KEY_PART1 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0";
-    var KEY_PART2 = ".eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0";
-    var KEY_PART3 = ".Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
-    var MINDS_KEY = KEY_PART1 + KEY_PART2 + KEY_PART3;
+    // ✅ 更新：用從 Cookie 裡抓到的新 auth_token
+    var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
+    
     var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
 
     var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
@@ -197,9 +196,6 @@
         document.getElementById("outputContent").innerHTML = html;
     }
 
-    // ============================================
-    // ✅ 修正版：完全模仿 Minds 網頁端的請求格式
-    // ============================================
     function generateAlias() {
         var timestamp = Date.now();
         var random = Math.random().toString(36).substring(2, 10);
@@ -216,19 +212,16 @@
         console.log("🤖 通過 Worker 調用 Minds API...");
         console.log("📝 Prompt:", prompt.substring(0, 200) + "...");
 
-        // ✅ 修正1：alias 用 webapp:thread-時間戳-隨機格式
         var alias = generateAlias();
-
-        // ✅ 修正2：messageText 加上來源前綴
         var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
 
         fetch(PROXY_BASE + "/minds", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Api-Key": MINDS_KEY
+                // ✅ 改：用 X-Auth-Token 傳遞 token
+                "X-Auth-Token": MINDS_KEY
             },
-            // ✅ 修正3：把 mindId 也傳給 Worker
             body: JSON.stringify({ 
                 mindId: MIND_ID,
                 alias: alias, 
@@ -251,7 +244,6 @@
         })
         .then(function(data) {
             console.log("📡 Minds 返回數據:", JSON.stringify(data).substring(0, 500));
-            // ✅ 修正4：多加幾個可能的字段名
             var text = data.reply || data.text || data.message || data.output || data.messageText || data.content || data.response || data.raw || "";
             if (text) {
                 console.log("✅ Minds API 調用成功，內容長度:", text.length);
