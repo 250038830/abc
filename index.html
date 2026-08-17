@@ -23,12 +23,6 @@
         .output-header { display: flex; align-items: center; color: #38bdf8; font-weight: 700; font-size: 11px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 12px; }
         .output-badge { background: rgba(3, 105, 161, 0.4); color: #38bdf8; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
         .output-content { font-size: 14px; color: #e2e8f0; line-height: 1.6; white-space: pre-wrap; }
-        .title-block { background: #111827; border-left: 4px solid #38bdf8; padding: 10px; margin-top: 10px; border-radius: 4px; }
-        .t-red { border-left-color: #f43f5e; color: #f43f5e; font-weight: bold; }
-        .t-yellow { border-left-color: #eab308; color: #eab308; font-weight: bold; }
-        .t-green { border-left-color: #10b981; color: #10b981; font-weight: bold; }
-        .t-gray { border-left-color: #64748b; }
-        .t-gray span { color: #94a3b8; font-weight: bold; }
         .status-bar { font-size: 12px; color: #38bdf8; background: #111827; padding: 6px 12px; border-radius: 6px; margin-bottom: 14px; border: 1px solid #1e293b; display: inline-block; }
         .loading { color: #eab308; font-weight: bold; display: none; margin-top: 15px; text-align: center; font-size: 14px; }
         .steam-tag { display: inline-block; background: linear-gradient(135deg, #1b2838, #2a475e); color: #66c0f4; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 600; border: 1px solid #66c0f4; }
@@ -39,6 +33,12 @@
         .proxy-status { font-size: 11px; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px; text-align: left; word-break: break-all; }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
+        /* 錯誤信息樣式 */
+        .error-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px; padding: 16px; margin-top: 10px; }
+        .error-title { color: #f43f5e; font-weight: bold; font-size: 15px; margin-bottom: 8px; }
+        .error-text { color: #fca5a5; font-size: 13px; line-height: 1.6; }
+        .error-retry { margin-top: 12px; background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .error-retry:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -173,12 +173,51 @@
     }
 
     // ============================================
+    // 顯示錯誤信息（Minds 失敗時用）
+    // ============================================
+    function showError(errorType, retryFunc) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("outputBox").style.display = "block";
+
+        var errorMsg = "";
+        var errorDetail = "";
+
+        if (errorType === "proxy_not_configured") {
+            errorMsg = "代理未配置";
+            errorDetail = "請在代碼中將 PROXY_BASE 設置為你的 Cloudflare Worker URL，然後重新上傳到 GitHub。";
+        } else if (errorType === "network_error") {
+            errorMsg = "網絡連接失敗";
+            errorDetail = "無法連接到 Cloudflare Worker 代理。請檢查：<br>1. Worker URL 是否正確<br>2. Worker 是否正常運行<br>3. 網絡連接是否正常";
+        } else if (errorType === "minds_offline") {
+            errorMsg = "Minds API 目前無法連接";
+            errorDetail = "Minds AI 服務當前不可用（offline）。可能的原因：<br>1. Minds 服務器維護中<br>2. API Key 已過期<br>3. 請求被限流<br><br>請稍後重試，或檢查 Minds 服務狀態。";
+        } else if (errorType === "empty_response") {
+            errorMsg = "Minds 返回空結果";
+            errorDetail = "Minds API 已響應，但返回內容為空。請稍後重試。";
+        } else {
+            errorMsg = "未知錯誤";
+            errorDetail = "發生未知錯誤，請稍後重試。";
+        }
+
+        var retryBtnId = "retryBtn_" + Date.now();
+        var html = '<div class="error-box">';
+        html += '<div class="error-title">❌ ' + errorMsg + '</div>';
+        html += '<div class="error-text">' + errorDetail + '</div>';
+        if (retryFunc) {
+            html += '<button class="error-retry" id="' + retryBtnId + '" onclick="(' + retryFunc.toString() + ')()">🔄 重新嘗試</button>';
+        }
+        html += '</div>';
+
+        document.getElementById("outputContent").innerHTML = html;
+    }
+
+    // ============================================
     // 通過 Worker 代理調用 Minds API
     // ============================================
     function callMinds(prompt, onSuccess, onFail) {
         if (!HAS_PROXY) {
             console.log("⚠️ 未配置代理，Minds 無法調用");
-            onFail();
+            onFail("proxy_not_configured");
             return;
         }
 
@@ -195,6 +234,9 @@
         })
         .then(function(r) {
             console.log("📡 Minds Worker 響應狀態:", r.status);
+            if (!r.ok) {
+                throw new Error("HTTP " + r.status);
+            }
             return r.json();
         })
         .then(function(data) {
@@ -204,78 +246,14 @@
                 console.log("✅ Minds API 調用成功，內容長度:", text.length);
                 onSuccess(text);
             } else {
-                console.warn("⚠️ Minds 返回內容為空，完整數據:", JSON.stringify(data));
-                onFail();
+                console.warn("⚠️ Minds 返回內容為空");
+                onFail("empty_response");
             }
         })
         .catch(function(e) {
             console.warn("⚠️ Minds Worker 調用失敗:", e.message);
-            onFail();
+            onFail("minds_offline");
         });
-    }
-
-    // ============================================
-    // Fallback 內容（Minds 失敗時用）
-    // ============================================
-    function genHotFallback(isHigh) {
-        var games = [
-            { name: "Counter-Strike 2", players: "580k", type: "射擊" },
-            { name: "Dota 2", players: "470k", type: "動作" },
-            { name: "PUBG", players: "320k", type: "射擊" },
-            { name: "黑神話：悟空", players: "20k", type: "魂系" }
-        ];
-        var game = games[Math.floor(Math.random() * games.length)];
-        var styleLabel = isHigh ? "爆款" : "冷門分析";
-        var icon = isHigh ? "🔥" : "🧊";
-        var top = getTopWeight();
-
-        var h = '<div class="status-bar" style="border-color: #f59e0b; color: #f59e0b;">';
-        h += '🎮 <strong>[Steam 熱門榜 - FALLBACK]</strong> 《' + game.name + '》 | 約在線: ' + game.players;
-        h += '<span class="steam-tag">FALLBACK</span></div>\n';
-        h += '<div class="status-bar">🔍 <strong>[推薦]</strong> 類型: <strong>' + game.type + '</strong> | 權重最高: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
-        h += '<strong>' + icon + ' 【3 種' + styleLabel + '標題】</strong>\n';
-
-        if (isHigh) {
-            h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 開局被虐到摔鍵盤？《' + game.name + '》新手不看這部片絕對卡關！</div>\n';
-            h += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 全網吹爆的《' + game.name + '》，冷靜下來後，我發現了這2個隱藏瑕疵...</div>\n';
-            h += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 99%玩家都漏掉！靠這 3 個開局隱藏支線道具，傷害直接翻倍！</div>';
-        } else {
-            h += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 為什麼《' + game.name + '》熱度掉這麼快？背後原因很現實...</div>\n';
-            h += '<div class="title-block t-gray"><span>【反向解析】：</span> 滿分神作也有死角？聊聊《' + game.name + '》那些被忽視的缺點</div>\n';
-            h += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + game.name + '》為什麼留不住休閒玩家？3個傳播致命傷</div>';
-        }
-        return h;
-    }
-
-    function genUpcomingFallback(isHigh) {
-        var games = [
-            { name: "GTA 6", hype: "極高", reason: "R星續作，全球玩家瘋狂期待" },
-            { name: "艾爾登法環：黑夜君臨", hype: "高", reason: "FromSoftware 續作，魂系愛好者高度期待" },
-            { name: "魔物獵人 荒野", hype: "高", reason: "卡普空大作，系列粉絲眾多" }
-        ];
-        var game = games[Math.floor(Math.random() * games.length)];
-        var styleLabel = isHigh ? "爆款" : "冷門分析";
-        var icon = isHigh ? "🔥" : "🧊";
-        var top = getTopWeight();
-
-        var h = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
-        h += '🚀 <strong>[即將推出 - FALLBACK]</strong> 《' + game.name + '》 | 討論度: ' + game.hype;
-        h += '<span class="upcoming-tag">FALLBACK</span></div>\n';
-        h += '<div class="status-bar">🔍 <strong>[推薦]</strong> 類型: <strong>' + detectType(game.name) + '</strong> | 權重最高: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
-        h += '<strong>🤖 Upcoming AI Pick (' + styleLabel + '): 《' + game.name + '》</strong>\n';
-        h += '<p>• <strong>為什麼推薦：</strong> ' + game.reason + '</p>\n\n';
-        h += '<strong>' + icon + ' 【3 種' + styleLabel + '標題】</strong>\n';
-
-        if (isHigh) {
-            h += '<div class="title-block"><span class="t-red">【情緒共鳴】：</span> 等了這麼久！《' + game.name + '》終於要來了，與其期待不如先看這裡...</div>\n';
-            h += '<div class="title-block"><span class="t-yellow">【權威逆向】：</span> 所有人都在吹《' + game.name + '》，但我發現了3個可能翻車的隱患！</div>\n';
-            h += '<div class="title-block"><span class="t-green">【數字勾引】：</span> 提前知道這 5 個細節！《' + game.name + '》上市當天你就是最懂的那個！</div>';
-        } else {
-            h += '<div class="title-block t-gray"><span>【冷門挖掘】：</span> 大家都在等《' + game.name + '》，但這款遊戲真的適合你嗎？</div>\n';
-            h += '<div class="title-block t-gray"><span>【反向解析】：</span> 《' + game.name + '》 hype 這麼高，會不會又是一場空歡喜？</div>\n';
-            h += '<div class="title-block t-gray"><span>【深度科普】：</span> 《' + game.name + '》為什麼還沒上市就這麼紅？3個關鍵原因</div>';
-        }
-        return h;
     }
 
     // ============================================
@@ -291,7 +269,7 @@
         var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
 
         if (!HAS_PROXY) {
-            alert("請先配置 Cloudflare Worker 代理！把代碼中的 YOUR_WORKER_URL 換成你的 Worker URL。");
+            showError("proxy_not_configured", null);
             return;
         }
 
@@ -317,9 +295,7 @@
         callMinds(
             prompt,
             function(text) {
-                // 更新權重
                 if (weight !== "none") {
-                    // 從 Minds 輸出中嘗試提取遊戲名（簡單處理）
                     updateWeight("Steam熱門遊戲", weight);
                 }
 
@@ -329,8 +305,9 @@
                 prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
                 showOutput(prefix + text);
             },
-            function() {
-                setTimeout(function() { showOutput(genHotFallback(isHigh)); }, 500);
+            function(errorType) {
+                // ❌ Minds 失敗時顯示錯誤信息，不再顯示預設內容
+                showError(errorType, onHotClick);
             }
         );
     }
@@ -344,7 +321,7 @@
         var styleLabel = isHigh ? "高觀看率爆款" : "低觀看率冷門";
 
         if (!HAS_PROXY) {
-            alert("請先配置 Cloudflare Worker 代理！把代碼中的 YOUR_WORKER_URL 換成你的 Worker URL。");
+            showError("proxy_not_configured", null);
             return;
         }
 
@@ -385,8 +362,9 @@
                 prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
                 showOutput(prefix + text);
             },
-            function() {
-                setTimeout(function() { showOutput(genUpcomingFallback(isHigh)); }, 500);
+            function(errorType) {
+                // ❌ Minds 失敗時顯示錯誤信息，不再顯示預設內容
+                showError(errorType, onUpcomingClick);
             }
         );
     }
