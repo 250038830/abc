@@ -71,10 +71,9 @@
     </div>
 
     <script>
-    // === 第1步：確認腳本開始執行 ===
     console.log("0️⃣ 腳本開始加載...");
 
-    // === 第2步：API Key 拆成小段拼接，避免複製時截斷 ===
+    // API Key 拆成小段拼接
     var KEY_PART1 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvMTBmN2QyMWUtOTgwZS00ZTY1LTlkZGMtYzdjN2EwNjRjMWU0In0";
     var KEY_PART2 = ".eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJidWlsZGVyIiwidmVyc2lvbiI6MSwiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4NTc0MTE3NSwiZXhwIjoxNzkzNTE3MTc1LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSIsImp0aSI6IjRkZDU0MjJlYTljZDRmMjY5NjNhZWRiNjc1MjdjMThhIn0";
     var KEY_PART3 = ".Rp7f1ZdvXGOm2Z2wmPZed2Y4emaOW7m5jowiPSD4E9OZuC4NwT6VsoQKI5CO0La_8l-whMak3mOmmOZUMaKtLA";
@@ -84,7 +83,7 @@
 
     console.log("1️⃣ API Key 拼接完成，長度：" + MINDS_KEY.length);
 
-    // === 第3步：權重系統 ===
+    // 權重系統
     var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
     var gameWeights = {};
 
@@ -117,6 +116,10 @@
     }
 
     function detectType(game) {
+        if (!game || typeof game !== "string") {
+            console.warn("⚠️ detectType 收到無效遊戲名:", game);
+            return "動作";
+        }
         var g = game.toLowerCase();
         if (g.indexOf("悟空") >= 0 || g.indexOf("魂") >= 0 || g.indexOf("艾爾登") >= 0 || g.indexOf("隻狼") >= 0 || g.indexOf("elden") >= 0) return "魂系";
         if (g.indexOf("射擊") >= 0 || g.indexOf("fps") >= 0 || g.indexOf("cod") >= 0 || g.indexOf("cs") >= 0 || g.indexOf("apex") >= 0 || g.indexOf("valorant") >= 0) return "射擊";
@@ -227,22 +230,21 @@
         return h;
     }
 
-    // === Steam API（修復 CORS 問題，多代理備用）===
+    // === Steam API（修復 CORS + 數據格式問題）===
     function fetchSteamGame(callback) {
         var url = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
         var done = false;
         var proxyIndex = 0;
         
-        // 多個 CORS 代理備用
         var proxies = [
-            "https://corsproxy.io/?url=",
-            "https://api.allorigins.win/raw?url=",
-            "https://thingproxy.freeboard.io/fetch/"
+            { url: "https://corsproxy.io/?url=", name: "corsproxy.io" },
+            { url: "https://api.allorigins.win/raw?url=", name: "allorigins" },
+            { url: "https://api.codetabs.com/v1/proxy?quest=", name: "codetabs" }
         ];
 
         var timer = setTimeout(function() {
             if (!done) { done = true; useFallback(); }
-        }, 10000); // 10 秒超時
+        }, 12000);
 
         function finish(data) {
             if (done) return;
@@ -257,46 +259,92 @@
             finish({ name: fb.name, players: fb.players, peak: "N/A", source: "fallback", type: fb.type });
         }
 
+        function parseSteamData(d) {
+            var ranks = null;
+            
+            if (d.response && d.response.ranks) {
+                ranks = d.response.ranks;
+            }
+            else if (d.contents) {
+                try {
+                    var inner = JSON.parse(d.contents);
+                    if (inner.response && inner.response.ranks) {
+                        ranks = inner.response.ranks;
+                    }
+                } catch(e) {}
+            }
+            else if (d.data) {
+                try {
+                    var inner2 = typeof d.data === "string" ? JSON.parse(d.data) : d.data;
+                    if (inner2.response && inner2.response.ranks) {
+                        ranks = inner2.response.ranks;
+                    }
+                } catch(e) {}
+            }
+            
+            return ranks;
+        }
+
         function tryNextProxy() {
             if (proxyIndex >= proxies.length) {
                 useFallback();
                 return;
             }
             
-            var proxyUrl = proxies[proxyIndex] + encodeURIComponent(url);
-            console.log("嘗試代理 " + (proxyIndex + 1) + "/" + proxies.length + ":", proxies[proxyIndex]);
+            var proxy = proxies[proxyIndex];
+            var proxyUrl = proxy.url + encodeURIComponent(url);
+            console.log("嘗試代理 " + (proxyIndex + 1) + "/" + proxies.length + ":", proxy.name);
             
             fetch(proxyUrl)
                 .then(function(r) {
                     if (!r.ok) throw new Error("HTTP " + r.status);
-                    return r.json();
+                    return r.text();
                 })
-                .then(function(d) {
-                    var ranks = d.response && d.response.ranks ? d.response.ranks : [];
-                    if (ranks.length > 0) {
-                        var p = ranks.slice(0, 10)[Math.floor(Math.random() * 10)];
-                        console.log("✅ 代理成功，選中遊戲:", p.name);
-                        finish({
-                            name: p.name,
-                            players: formatNum(p.concurrent_in_game),
-                            peak: formatNum(p.peak_in_game),
-                            source: "steam-proxy",
-                            type: detectType(p.name)
-                        });
-                    } else {
-                        console.warn("⚠️ 數據格式不對，嘗試下一個代理");
+                .then(function(text) {
+                    console.log("代理 " + proxy.name + " 返回數據長度:", text.length);
+                    var d;
+                    try {
+                        d = JSON.parse(text);
+                    } catch(e) {
+                        throw new Error("JSON 解析失敗");
+                    }
+                    
+                    var ranks = parseSteamData(d);
+                    
+                    if (!ranks || ranks.length === 0) {
+                        console.warn("⚠️ 代理 " + proxy.name + " 數據格式不對，ranks 為空");
+                        console.log("返回數據預覽:", text.substring(0, 200));
                         proxyIndex++;
                         tryNextProxy();
+                        return;
                     }
+                    
+                    var count = Math.min(10, ranks.length);
+                    var p = ranks[Math.floor(Math.random() * count)];
+                    
+                    if (!p || !p.name) {
+                        console.warn("⚠️ 選中的遊戲數據不完整:", p);
+                        proxyIndex++;
+                        tryNextProxy();
+                        return;
+                    }
+                    
+                    console.log("✅ 代理 " + proxy.name + " 成功，選中遊戲:", p.name);
+                    finish({
+                        name: p.name,
+                        players: formatNum(p.concurrent_in_game),
+                        peak: formatNum(p.peak_in_game),
+                        source: "steam-proxy",
+                        type: detectType(p.name)
+                    });
                 })
                 .catch(function(e) {
-                    console.warn("⚠️ 代理失敗:", e.message);
+                    console.warn("⚠️ 代理 " + proxy.name + " 失敗:", e.message);
                     proxyIndex++;
                     tryNextProxy();
                 });
         }
 
-        // 直接用代理（瀏覽器環境下直連一定會被 CORS 擋）
         tryNextProxy();
     }
 
