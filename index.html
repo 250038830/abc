@@ -408,7 +408,7 @@
                 console.log("✅ 消息已發送，開始輪詢回覆...");
                 var lastReply = "";
                 var attempts = 0;
-                var maxAttempts = 20; // 最多等 60 秒 (20 * 3秒)
+                var maxAttempts = 100; // 最多等 60 秒 (20 * 3秒)
 
                 function pollReply() {
                     attempts++;
