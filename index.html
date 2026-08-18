@@ -181,7 +181,8 @@
         }
         .output-content th { background: #1e293b; color: #38bdf8; }
         .output-content blockquote {
-            background: #111827;
+            background: #111827 !important;
+            color: #e2e8f0 !important;
             border-left: 4px solid #38bdf8;
             padding: 14px 18px;
             margin: 14px 0;
@@ -220,6 +221,7 @@
             background: #070b14;
             border: 1px solid rgba(234, 179, 8, 0.3);
             border-radius: 12px;
+            white-space: pre-line;
         }
         .proxy-status {
             font-size: 11px;
@@ -377,7 +379,15 @@
         function showOutput(html) {
             document.getElementById("loading").style.display = "none";
             document.getElementById("outputBox").style.display = "block";
-            document.getElementById("outputContent").innerHTML = html;
+            var container = document.getElementById("outputContent");
+            container.innerHTML = html;
+            // 清除 Minds 內容中的內聯 background/color 樣式，避免淺色樣式在深色主題下看不清
+            var allElements = container.querySelectorAll("*");
+            for (var i = 0; i < allElements.length; i++) {
+                allElements[i].style.background = "";
+                allElements[i].style.backgroundColor = "";
+                allElements[i].style.color = "";
+            }
         }
 
         function showError(errorType, retryFunc, errorDetail) {
@@ -418,7 +428,7 @@
             document.getElementById("outputContent").innerHTML = html;
         }
 
-        // ✅ callMinds：發送 + 前端輪詢
+        // ✅ callMinds：發送前記錄基準 + 前端輪詢（避免顯示舊回覆）
         function callMinds(prompt, onSuccess, onFail) {
             if (!HAS_PROXY) {
                 onFail("proxy_not_configured");
@@ -429,58 +439,63 @@
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
 
-            fetch(PROXY_BASE + "/minds/send", {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify({ mindId: MIND_ID, messageText: messageText })
-            })
-            .then(function(r) {
-                console.log("📡 發送狀態:", r.status);
-                return r.text().then(function(text) {
-                    if (!r.ok) throw new Error("Send failed: " + text);
-                    return JSON.parse(text);
+            // 第一步：先獲取發送前的最新回覆作為基準
+            fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
+            .then(function(r) { return r.json(); })
+            .then(function(beforeData) {
+                var beforeReply = beforeData.reply || "";
+                console.log("📋 發送前基準回覆長度:", beforeReply.length);
+
+                // 第二步：發送消息
+                return fetch(PROXY_BASE + "/minds/send", {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify({ mindId: MIND_ID, messageText: messageText })
+                })
+                .then(function(r) {
+                    console.log("📡 發送狀態:", r.status);
+                    return r.text().then(function(text) {
+                        if (!r.ok) throw new Error("Send failed: " + text);
+                        return JSON.parse(text);
+                    });
+                })
+                .then(function() {
+                    // 第三步：輪詢，直到拿到不同於基準的新回覆
+                    console.log("✅ 消息已發送，開始輪詢回覆...");
+                    var attempts = 0;
+                    var maxAttempts = 100; // 最多等 300 秒
+
+                    function pollReply() {
+                        attempts++;
+                        fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var reply = data.reply || "";
+                            console.log("📡 輪詢 #" + attempts + ", 回覆長度:", reply.length);
+
+                            if (reply && reply !== beforeReply) {
+                                console.log("✅ 收到新 AI 回覆，長度:", reply.length);
+                                onSuccess(reply);
+                            } else if (attempts < maxAttempts) {
+                                setTimeout(pollReply, 3000);
+                            } else {
+                                onFail("timeout");
+                            }
+                        })
+                        .catch(function(e) {
+                            if (attempts < maxAttempts) {
+                                setTimeout(pollReply, 3000);
+                            } else {
+                                onFail("minds_error", e.message);
+                            }
+                        });
+                    }
+
+                    setTimeout(pollReply, 5000);
                 });
             })
-            .then(function(sendResult) {
-                console.log("✅ 消息已發送，開始輪詢回覆...");
-                var lastReply = "";
-                var attempts = 0;
-                var maxAttempts = 100; // 最多等 300 秒
-
-                function pollReply() {
-                    attempts++;
-                    fetch(PROXY_BASE + "/minds/reply", {
-                        method: "POST",
-                        headers: headers
-                    })
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var reply = data.reply || "";
-                        console.log("📡 輪詢 #" + attempts + ", 回覆長度:", reply.length);
-
-                        if (reply && reply !== lastReply) {
-                            console.log("✅ 收到 AI 回覆，長度:", reply.length);
-                            onSuccess(reply);
-                        } else if (attempts < maxAttempts) {
-                            lastReply = reply;
-                            setTimeout(pollReply, 3000);
-                        } else {
-                            onFail("timeout");
-                        }
-                    })
-                    .catch(function(e) {
-                        if (attempts < maxAttempts) {
-                            setTimeout(pollReply, 3000);
-                        } else {
-                            onFail("minds_error", e.message);
-                        }
-                    });
-                }
-
-                setTimeout(pollReply, 5000);
-            })
             .catch(function(e) {
-                console.warn("⚠️ 發送失敗:", e.message);
+                console.warn("⚠️ 失敗:", e.message);
                 onFail("minds_error", e.message);
             });
         }
