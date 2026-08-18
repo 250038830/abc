@@ -10,21 +10,20 @@
             color: #f3f4f6;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 16px;
+            padding: 24px 16px;
             box-sizing: border-box;
         }
         .container {
-            max-width: 460px;
+            max-width: 1000px;
             width: 100%;
             background-color: #0b1329;
             border: 1px solid #1e293b;
             border-radius: 20px;
             padding: 32px;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.15);
-            text-align: center;
             box-sizing: border-box;
         }
         h1 {
@@ -35,20 +34,41 @@
             background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-align: center;
         }
         .desc {
             font-size: 14px;
             color: #9ca3af;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
             line-height: 1.5;
+            text-align: center;
         }
+
+        /* === 左右兩欄布局 === */
+        .main-layout {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+        }
+        .control-panel {
+            width: 320px;
+            flex-shrink: 0;
+        }
+        .output-panel {
+            flex: 1;
+            min-width: 0;
+        }
+        @media (max-width: 820px) {
+            .main-layout { flex-direction: column; }
+            .control-panel { width: 100%; }
+        }
+
         .label {
             display: block;
             font-size: 13px;
             font-weight: 600;
             color: #9fa8b6;
             margin-bottom: 8px;
-            text-align: left;
         }
         select.input-field {
             width: 100%;
@@ -86,94 +106,13 @@
             color: #6b7280;
             line-height: 1.4;
             margin-top: -4px;
-            margin-bottom: 24px;
-            text-align: left;
+            margin-bottom: 20px;
         }
         .btn-hint {
             font-size: 11px;
             color: rgba(255,255,255,0.7);
             margin-top: 4px;
             font-weight: 400;
-        }
-        .output-box {
-            display: none;
-            background: #070b14;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
-            text-align: left;
-        }
-        .output-header {
-            display: flex;
-            align-items: center;
-            color: #38bdf8;
-            font-weight: 700;
-            font-size: 11px;
-            border-bottom: 1px solid #1e293b;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .output-badge {
-            background: rgba(3, 105, 161, 0.4);
-            color: #38bdf8;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: auto;
-        }
-        .output-content {
-            font-size: 14px;
-            color: #e2e8f0;
-            line-height: 1.6;
-        }
-        .output-content h1, .output-content h2, .output-content h3 { color: #38bdf8; margin-top: 16px; }
-        .output-content table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-        .output-content th, .output-content td { border: 1px solid #374151; padding: 8px; text-align: left; }
-        .output-content th { background: #1e293b; }
-        .output-content blockquote { background: #111827; border-left: 4px solid #38bdf8; padding: 12px; margin: 12px 0; }
-        .output-content a { color: #60a5fa; }
-        .output-content hr { border: none; border-top: 1px solid #1e293b; margin: 16px 0; }
-        .status-bar {
-            font-size: 12px;
-            color: #38bdf8;
-            background: #111827;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-bottom: 14px;
-            border: 1px solid #1e293b;
-            display: inline-block;
-        }
-        .loading {
-            color: #eab308;
-            font-weight: bold;
-            display: none;
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .steam-tag {
-            display: inline-block;
-            background: linear-gradient(135deg, #1b2838, #2a475e);
-            color: #66c0f4;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 6px;
-            font-weight: 600;
-            border: 1px solid #66c0f4;
-        }
-        .upcoming-tag {
-            display: inline-block;
-            background: linear-gradient(135deg, #581c87, #7e22ce);
-            color: #e9d5ff;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 6px;
-            font-weight: 600;
-            border: 1px solid #a855f7;
         }
         .divider {
             display: flex;
@@ -189,12 +128,104 @@
             background: #1e293b;
         }
         .divider span { padding: 0 12px; }
+
+        /* === 輸出區 === */
+        .output-box {
+            display: none;
+            background: #070b14;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+        }
+        .output-header {
+            display: flex;
+            align-items: center;
+            color: #38bdf8;
+            font-weight: 700;
+            font-size: 11px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+        .output-badge {
+            background: rgba(3, 105, 161, 0.4);
+            color: #38bdf8;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        .output-content {
+            font-size: 14px;
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+        .output-content h1, .output-content h2, .output-content h3 {
+            color: #38bdf8;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .output-content h2 { font-size: 18px; }
+        .output-content h3 { font-size: 16px; }
+        .output-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 14px 0;
+            font-size: 13px;
+        }
+        .output-content th, .output-content td {
+            border: 1px solid #374151;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        .output-content th { background: #1e293b; color: #38bdf8; }
+        .output-content blockquote {
+            background: #111827;
+            border-left: 4px solid #38bdf8;
+            padding: 14px 18px;
+            margin: 14px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .output-content a { color: #60a5fa; }
+        .output-content hr {
+            border: none;
+            border-top: 1px solid #1e293b;
+            margin: 20px 0;
+        }
+        .output-content ul, .output-content ol {
+            padding-left: 24px;
+            line-height: 1.8;
+        }
+        .output-content li { margin-bottom: 6px; }
+        .output-content p { margin: 10px 0; }
+
+        .status-bar {
+            font-size: 12px;
+            color: #38bdf8;
+            background: #111827;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid #1e293b;
+            display: inline-block;
+        }
+        .loading {
+            color: #eab308;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            font-size: 15px;
+            padding: 40px 20px;
+            background: #070b14;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 12px;
+        }
         .proxy-status {
             font-size: 11px;
             padding: 8px 12px;
             border-radius: 6px;
             margin-bottom: 16px;
-            text-align: left;
             word-break: break-all;
         }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -203,17 +234,16 @@
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.4);
             border-radius: 10px;
-            padding: 16px;
-            margin-top: 10px;
+            padding: 20px;
         }
-        .error-title { color: #f43f5e; font-weight: bold; font-size: 15px; margin-bottom: 8px; }
+        .error-title { color: #f43f5e; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
         .error-text { color: #fca5a5; font-size: 13px; line-height: 1.6; }
         .error-retry {
-            margin-top: 12px;
+            margin-top: 14px;
             background: #ef4444;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
@@ -226,43 +256,51 @@
     <div class="container">
         <h1>Viral Game Content Agent</h1>
         <div class="desc">Track 1: Audience Growth. Powered 100% by Minds AI.</div>
-        <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置，請在代碼中填入 YOUR_WORKER_URL</div>
 
-        <label class="label">內容風格</label>
-        <select id="styleSelect" class="input-field">
-            <option value="high">🔥 爆款路線（毒舌共鳴）</option>
-            <option value="low">🧊 冷門分析（深度挖掘）</option>
-        </select>
-        <div class="hint">決定講稿和標題的風格方向</div>
+        <div class="main-layout">
+            <!-- 左邊：控制區 -->
+            <div class="control-panel">
+                <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
 
-        <label class="label">影片表現反饋</label>
-        <select id="weightSelect" class="input-field">
-            <option value="up">📈 表現好（權重 +0.5）</option>
-            <option value="down">📉 表現差（權重 -0.3）</option>
-            <option value="none">➖ 不調整</option>
-        </select>
-        <div class="hint">根據你實際影片數據反饋，影響後續推薦優先級</div>
+                <label class="label">內容風格</label>
+                <select id="styleSelect" class="input-field">
+                    <option value="high">🔥 爆款路線（毒舌共鳴）</option>
+                    <option value="low">🧊 冷門分析（深度挖掘）</option>
+                </select>
+                <div class="hint">決定講稿和標題的風格方向</div>
 
-        <div class="divider"><span>選擇搜尋模式</span></div>
+                <label class="label">影片表現反饋</label>
+                <select id="weightSelect" class="input-field">
+                    <option value="up">📈 表現好（權重 +0.5）</option>
+                    <option value="down">📉 表現差（權重 -0.3）</option>
+                    <option value="none">➖ 不調整</option>
+                </select>
+                <div class="hint">根據你實際影片數據反饋，影響後續推薦優先級</div>
 
-        <button type="button" class="btn btn-hot" onclick="onHotClick()">
-            🔥 當前 Steam 熱門榜
-            <div class="btn-hint">Minds AI 搜尋現在最多人玩的遊戲</div>
-        </button>
+                <div class="divider"><span>選擇搜尋模式</span></div>
 
-        <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
-            🚀 即將推出的熱門遊戲
-            <div class="btn-hint">Minds AI 搜尋未來上市的高討論度遊戲</div>
-        </button>
+                <button type="button" class="btn btn-hot" onclick="onHotClick()">
+                    🔥 當前 Steam 熱門榜
+                    <div class="btn-hint">Minds AI 搜尋現在最多人玩的遊戲</div>
+                </button>
 
-        <div id="loading" class="loading">⏳ 處理中...</div>
-
-        <div id="outputBox" class="output-box">
-            <div class="output-header">
-                <span>🤖 MINDS AI 輸出結果</span>
-                <span class="output-badge">LIVE API</span>
+                <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
+                    🚀 即將推出的熱門遊戲
+                    <div class="btn-hint">Minds AI 搜尋未來上市的高討論度遊戲</div>
+                </button>
             </div>
-            <div id="outputContent" class="output-content"></div>
+
+            <!-- 右邊：輸出區 -->
+            <div class="output-panel">
+                <div id="loading" class="loading">⏳ 處理中...</div>
+                <div id="outputBox" class="output-box">
+                    <div class="output-header">
+                        <span>🤖 MINDS AI 輸出結果</span>
+                        <span class="output-badge">LIVE API</span>
+                    </div>
+                    <div id="outputContent" class="output-content"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -360,7 +398,7 @@
                 errorText = "Minds API 已響應，但返回內容為空。請稍後重試。";
             } else if (errorType === "timeout") {
                 errorMsg = "AI 回覆超時";
-                errorText = "Minds AI 生成回覆時間過長（超過 60 秒）。請稍後重試。";
+                errorText = "Minds AI 生成回覆時間過長（超過 300 秒）。請稍後重試。";
             } else if (errorType === "minds_error") {
                 errorMsg = "Minds API 調用失敗";
                 errorText = "錯誤詳情：<br><code style='background:#111;padding:4px 8px;border-radius:4px;font-size:12px;word-break:break-all;display:inline-block;margin-top:4px;'>" + (errorDetail || "未知錯誤") + "</code>";
@@ -380,7 +418,7 @@
             document.getElementById("outputContent").innerHTML = html;
         }
 
-        // ✅ 改進的 callMinds：發送 + 前端輪詢獲取回覆
+        // ✅ callMinds：發送 + 前端輪詢
         function callMinds(prompt, onSuccess, onFail) {
             if (!HAS_PROXY) {
                 onFail("proxy_not_configured");
@@ -391,7 +429,6 @@
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
 
-            // 第一步：發送消息
             fetch(PROXY_BASE + "/minds/send", {
                 method: "POST",
                 headers: headers,
@@ -408,7 +445,7 @@
                 console.log("✅ 消息已發送，開始輪詢回覆...");
                 var lastReply = "";
                 var attempts = 0;
-                var maxAttempts = 100; // 最多等 60 秒 (20 * 3秒)
+                var maxAttempts = 100; // 最多等 300 秒
 
                 function pollReply() {
                     attempts++;
@@ -422,15 +459,12 @@
                         console.log("📡 輪詢 #" + attempts + ", 回覆長度:", reply.length);
 
                         if (reply && reply !== lastReply) {
-                            // 找到新回覆了！
                             console.log("✅ 收到 AI 回覆，長度:", reply.length);
                             onSuccess(reply);
                         } else if (attempts < maxAttempts) {
-                            // 還沒生成，繼續等
                             lastReply = reply;
                             setTimeout(pollReply, 3000);
                         } else {
-                            // 超時
                             onFail("timeout");
                         }
                     })
@@ -443,7 +477,6 @@
                     });
                 }
 
-                // 先等 5 秒再開始輪詢（AI 需要時間啟動）
                 setTimeout(pollReply, 5000);
             })
             .catch(function(e) {
@@ -478,14 +511,14 @@
             prompt += "5. 影片大綱（3-5個重點段落）\n\n";
             prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
 
-            showLoading("🤖 Minds AI 正在搜尋 Steam 熱門遊戲...（可能需要 10-30 秒）");
+            showLoading("🤖 Minds AI 正在搜尋 Steam 熱門遊戲...\n（可能需要 10-60 秒）");
 
             callMinds(prompt,
                 function(text) {
                     if (weight !== "none") { updateWeight("Steam熱門遊戲", weight); }
                     var prefix = '<div class="status-bar" style="border-color: #66c0f4; color: #66c0f4;">';
                     prefix += '🎮 <strong>[Steam 熱門榜]</strong> Minds AI 已搜尋當前在線人數最高的遊戲';
-                    prefix += '<span class="steam-tag">MINDS AI</span></div>\n';
+                    prefix += '</div>\n';
                     prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
                     showOutput(prefix + text);
                 },
@@ -526,14 +559,14 @@
             prompt += "5. 影片大綱（3-5個重點段落）\n\n";
             prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
 
-            showLoading("🚀 Minds AI 正在搜尋即將推出的熱門遊戲...（可能需要 10-30 秒）");
+            showLoading("🚀 Minds AI 正在搜尋即將推出的熱門遊戲...\n（可能需要 10-60 秒）");
 
             callMinds(prompt,
                 function(text) {
                     if (weight !== "none") { updateWeight("即將推出遊戲", weight); }
                     var prefix = '<div class="status-bar" style="border-color: #a855f7; color: #c084fc;">';
                     prefix += '🚀 <strong>[Steam 即將推出]</strong> Minds AI 已搜尋高討論度遊戲';
-                    prefix += '<span class="upcoming-tag">MINDS AI</span></div>\n';
+                    prefix += '</div>\n';
                     prefix += '<div class="status-bar">🔍 <strong>[權重參考]</strong> 權重最高類型: <strong>' + top.name + ' (' + top.weight.toFixed(1) + ')</strong></div>\n\n';
                     showOutput(prefix + text);
                 },
