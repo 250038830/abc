@@ -339,14 +339,6 @@
                 </select>
                 <div class="hint">爆款 = 熱門遊戲；冷門 = 在線人數少但好評率高的單機遊戲</div>
 
-                <label class="label">影片表現反饋</label>
-                <select id="weightSelect" class="input-field">
-                    <option value="up">📈 表現好（權重 +0.5）</option>
-                    <option value="down">📉 表現差（權重 -0.3）</option>
-                    <option value="none">➖ 不調整</option>
-                </select>
-                <div class="hint">根據你實際影片數據反饋，影響後續推薦優先級</div>
-
                 <div class="divider"><span>一鍵生成企劃</span></div>
 
                 <button type="button" class="btn btn-hot" onclick="onHotClick()">
@@ -410,51 +402,6 @@
         var currentPollTimer = null;
         var currentRequestId = 0;
 
-        var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
-        var gameWeights = {};
-
-        try {
-            var saved = localStorage.getItem("gameWeights");
-            if (saved) {
-                var parsed = JSON.parse(saved);
-                for (var k in DEFAULT_WEIGHTS) { gameWeights[k] = DEFAULT_WEIGHTS[k]; }
-                for (var k2 in parsed) { gameWeights[k2] = parsed[k2]; }
-            } else {
-                for (var k3 in DEFAULT_WEIGHTS) { gameWeights[k3] = DEFAULT_WEIGHTS[k3]; }
-            }
-        } catch(e) {
-            for (var k4 in DEFAULT_WEIGHTS) { gameWeights[k4] = DEFAULT_WEIGHTS[k4]; }
-        }
-
-        function saveWeights() {
-            try { localStorage.setItem("gameWeights", JSON.stringify(gameWeights)); } catch(e) {}
-        }
-
-        function detectType(game) {
-            if (!game || typeof game !== "string") return "動作";
-            var g = game.toLowerCase();
-            if (g.indexOf("悟空") >= 0 || g.indexOf("魂") >= 0 || g.indexOf("艾爾登") >= 0 || g.indexOf("隻狼") >= 0 || g.indexOf("elden") >= 0 || g.indexOf("black myth") >= 0) return "魂系";
-            if (g.indexOf("射擊") >= 0 || g.indexOf("fps") >= 0 || g.indexOf("cod") >= 0 || g.indexOf("cs") >= 0 || g.indexOf("apex") >= 0 || g.indexOf("valorant") >= 0 || g.indexOf("counter-strike") >= 0 || g.indexOf("pubg") >= 0) return "射擊";
-            if (g.indexOf("卡牌") >= 0 || g.indexOf("爐石") >= 0 || g.indexOf("hearthstone") >= 0 || g.indexOf("pokemon") >= 0) return "卡牌";
-            return "動作";
-        }
-
-        function updateWeight(game, feedback) {
-            var type = detectType(game);
-            if (feedback === "up") { gameWeights[type] += 0.5; }
-            else if (feedback === "down") { gameWeights[type] = Math.max(0, gameWeights[type] - 0.3); }
-            saveWeights();
-            return { type: type, weight: gameWeights[type], feedback: feedback };
-        }
-
-        function getTopWeight() {
-            var maxKey = "動作", maxVal = 0;
-            for (var k in gameWeights) {
-                if (gameWeights[k] > maxVal) { maxVal = gameWeights[k]; maxKey = k; }
-            }
-            return { name: maxKey, weight: maxVal };
-        }
-
         // ===== 聊天界面函數 =====
         function addMessage(role, html) {
             var container = document.getElementById("chatMessages");
@@ -463,7 +410,6 @@
             var contentDiv = document.createElement("div");
             contentDiv.className = "message-content";
             contentDiv.innerHTML = html;
-            // 清除 AI 消息的內聯樣式
             if (role === "ai") {
                 var allElements = contentDiv.querySelectorAll("*");
                 for (var i = 0; i < allElements.length; i++) {
@@ -512,7 +458,6 @@
                 return;
             }
 
-            // 取消上一個輪詢
             if (currentPollTimer) {
                 clearTimeout(currentPollTimer);
                 currentPollTimer = null;
@@ -524,14 +469,12 @@
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
 
-            // 第一步：獲取發送前最新 AI 回覆的時間戳
             fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(beforeData) {
                 var beforeCreatedAt = beforeData.createdAt || "";
                 console.log("📋 發送前基準時間:", beforeCreatedAt);
 
-                // 第二步：發送消息
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
@@ -545,7 +488,6 @@
                     });
                 })
                 .then(function() {
-                    // 第三步：輪詢新回覆
                     console.log("✅ 消息已發送，開始輪詢回覆...");
                     var attempts = 0;
                     var maxAttempts = 60;
@@ -631,9 +573,7 @@
         function onHotClick() {
             console.log("🎯 當前遊戲按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
-            var weight = document.getElementById("weightSelect").value;
             var isHot = mode === "high";
-            var top = getTopWeight();
 
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
 
@@ -644,10 +584,8 @@
                 userMsg = "🎮 <strong>[爆款路線]</strong> 搜尋當前 Steam 熱門遊戲並生成影片企劃";
                 prompt = "你是一個遊戲內容創作助手。請搜尋並列出目前 Steam 平台上在線人數最高的熱門遊戲（前5名），";
                 prompt += "包括遊戲名稱、大約在線人數、遊戲類型。\n\n";
-                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，";
-                prompt += "並根據以下資訊生成完整的影片企劃：\n\n";
-                prompt += "- 我的頻道目前權重最高的遊戲類型是「" + top.name + "」（權重值：" + top.weight.toFixed(1) + "）\n";
-                prompt += "- 內容風格：高觀看率爆款\n\n";
+                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，生成完整的影片企劃。\n\n";
+                prompt += "內容風格：高觀看率爆款\n\n";
                 prompt += "請輸出以下內容：\n";
                 prompt += "1. Steam 熱門榜 Top 5（遊戲名 + 在線人數 + 類型）\n";
                 prompt += "2. 推薦遊戲及推薦理由\n";
@@ -660,10 +598,8 @@
                 prompt = "你是一個遊戲內容創作助手。請搜尋目前 Steam 平台上在線人數較少（小眾）但好評率極高（壓倒性好評/特別好評）的單機遊戲（前5名），";
                 prompt += "包括遊戲名稱、大約在線人數、Steam 好評率、遊戲類型、發售年份。\n\n";
                 prompt += "重點：必須是在線人數不多、屬於小眾冷門，但玩家評價極高的單機遊戲，不要推薦大作或熱門遊戲。\n\n";
-                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲，";
-                prompt += "並根據以下資訊生成完整的影片企劃：\n\n";
-                prompt += "- 我的頻道目前權重最高的遊戲類型是「" + top.name + "」（權重值：" + top.weight.toFixed(1) + "）\n";
-                prompt += "- 內容風格：深度挖掘、推坑向、強調\"被低估的寶藏\"\n\n";
+                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲。\n\n";
+                prompt += "內容風格：深度挖掘、推坑向、強調\"被低估的寶藏\"\n\n";
                 prompt += "請輸出以下內容：\n";
                 prompt += "1. 冷門好評單機 Top 5（遊戲名 + 在線人數 + 好評率 + 類型 + 年份）\n";
                 prompt += "2. 最推薦的遊戲及推薦理由\n";
@@ -680,7 +616,6 @@
             callMinds(prompt,
                 function(text) {
                     removeTyping();
-                    if (weight !== "none") { updateWeight(isHot ? "Steam熱門遊戲" : "冷門好評單機", weight); }
                     addMessage("ai", text);
                     setInputEnabled(true);
                 },
@@ -700,9 +635,7 @@
         function onUpcomingClick() {
             console.log("🎯 即將推出按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
-            var weight = document.getElementById("weightSelect").value;
             var isHot = mode === "high";
-            var top = getTopWeight();
 
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
 
@@ -714,10 +647,8 @@
                 prompt = "你是一個遊戲內容創作助手。請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲，";
                 prompt += "找出目前討論度最高、最有爆款潛力的3款遊戲。\n\n";
                 prompt += "對於每款遊戲，請提供：遊戲名稱、預計發售日期、遊戲類型、為什麼討論度高。\n\n";
-                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，";
-                prompt += "並根據以下資訊生成完整的影片企劃：\n\n";
-                prompt += "- 我的頻道目前權重最高的遊戲類型是「" + top.name + "」（權重值：" + top.weight.toFixed(1) + "）\n";
-                prompt += "- 內容風格：高觀看率爆款\n\n";
+                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，生成完整的影片企劃。\n\n";
+                prompt += "內容風格：高觀看率爆款\n\n";
                 prompt += "請輸出以下內容：\n";
                 prompt += "1. 即將推出的高討論度遊戲 Top 3\n";
                 prompt += "2. 最推薦的遊戲及推薦理由\n";
@@ -731,10 +662,8 @@
                 prompt += "找出目前討論度不高但品質看起來極高、有潛力成為黑馬的3款單機遊戲。\n\n";
                 prompt += "重點：必須是小眾、非大作、由獨立開發者或小團隊製作的單機遊戲，不要推薦 3A 大作。\n\n";
                 prompt += "對於每款遊戲，請提供：遊戲名稱、預計發售日期、遊戲類型、開發團隊背景、為什麼值得期待。\n\n";
-                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲，";
-                prompt += "並根據以下資訊生成完整的影片企劃：\n\n";
-                prompt += "- 我的頻道目前權重最高的遊戲類型是「" + top.name + "」（權重值：" + top.weight.toFixed(1) + "）\n";
-                prompt += "- 內容風格：深度挖掘、推坑向、強調\"可能被錯過的黑馬\"\n\n";
+                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲。\n\n";
+                prompt += "內容風格：深度挖掘、推坑向、強調\"可能被錯過的黑馬\"\n\n";
                 prompt += "請輸出以下內容：\n";
                 prompt += "1. 即將推出的冷門單機 Top 3\n";
                 prompt += "2. 最推薦的遊戲及推薦理由\n";
@@ -751,7 +680,6 @@
             callMinds(prompt,
                 function(text) {
                     removeTyping();
-                    if (weight !== "none") { updateWeight(isHot ? "即將推出遊戲" : "即將推出冷門單機", weight); }
                     addMessage("ai", text);
                     setInputEnabled(true);
                 },
