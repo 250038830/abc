@@ -314,6 +314,10 @@
         }
         console.log("1️⃣ 代理狀態：" + (HAS_PROXY ? "已配置 ✅ " + PROXY_BASE : "未配置 ⚠️"));
 
+        // 全局：當前輪詢定時器，用於取消上一個請求
+        var currentPollTimer = null;
+        var currentRequestId = 0;
+
         var DEFAULT_WEIGHTS = { "魂系": 1.5, "動作": 1.0, "射擊": 0.5, "卡牌": 0.0 };
         var gameWeights = {};
 
@@ -397,7 +401,7 @@
                 errorText = "Minds API 已響應，但返回內容為空。請稍後重試。";
             } else if (errorType === "timeout") {
                 errorMsg = "AI 回覆超時";
-                errorText = "Minds AI 生成回覆時間過長（超過 300 秒）。請稍後重試。";
+                errorText = "Minds AI 生成回覆時間過長（超過 300 秒）。可能是 Minds 端臨時繁忙，請稍後重試。";
             } else if (errorType === "minds_error") {
                 errorMsg = "Minds API 調用失敗";
                 errorText = "錯誤詳情：<br><code style='background:#111;padding:4px 8px;border-radius:4px;font-size:12px;word-break:break-all;display:inline-block;margin-top:4px;'>" + (errorDetail || "未知錯誤") + "</code>";
@@ -417,22 +421,33 @@
             document.getElementById("outputContent").innerHTML = html;
         }
 
+        // ✅ callMinds：時間戳檢測 + 自動取消上一個輪詢
         function callMinds(prompt, onSuccess, onFail) {
             if (!HAS_PROXY) {
                 onFail("proxy_not_configured");
                 return;
             }
 
+            // 取消上一個輪詢
+            if (currentPollTimer) {
+                clearTimeout(currentPollTimer);
+                currentPollTimer = null;
+                console.log("🛑 已取消上一個輪詢");
+            }
+            var myRequestId = ++currentRequestId;
+
             console.log("🤖 發送消息到 Minds...");
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
 
+            // 第一步：獲取發送前最新 AI 回覆的時間戳作為基準
             fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(beforeData) {
-                var beforeReply = beforeData.reply || "";
-                console.log("📋 發送前基準回覆長度:", beforeReply.length);
+                var beforeCreatedAt = beforeData.createdAt || "";
+                console.log("📋 發送前基準時間:", beforeCreatedAt);
 
+                // 第二步：發送消息
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
@@ -446,41 +461,55 @@
                     });
                 })
                 .then(function() {
+                    // 第三步：用時間戳輪詢新回覆
                     console.log("✅ 消息已發送，開始輪詢回覆...");
                     var attempts = 0;
-                    var maxAttempts = 100;
+                    var maxAttempts = 60; // 60 * 5秒 = 300秒
 
                     function pollReply() {
+                        // 如果被新請求取代，停止輪詢
+                        if (myRequestId !== currentRequestId) {
+                            console.log("🛑 輪詢被新請求取代，停止");
+                            return;
+                        }
+
                         attempts++;
                         fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             var reply = data.reply || "";
-                            console.log("📡 輪詢 #" + attempts + ", 回覆長度:", reply.length);
+                            var createdAt = data.createdAt || "";
+                            console.log("📡 輪詢 #" + attempts + ", 時間:", createdAt, ", 長度:", reply.length);
 
-                            if (reply && reply !== beforeReply) {
-                                console.log("✅ 收到新 AI 回覆，長度:", reply.length);
+                            // 用時間戳判斷是否為新回覆
+                            if (reply && createdAt && createdAt !== beforeCreatedAt) {
+                                console.log("✅ 收到新 AI 回覆，時間:", createdAt);
+                                currentPollTimer = null;
                                 onSuccess(reply);
                             } else if (attempts < maxAttempts) {
-                                setTimeout(pollReply, 3000);
+                                currentPollTimer = setTimeout(pollReply, 5000);
                             } else {
+                                currentPollTimer = null;
                                 onFail("timeout");
                             }
                         })
                         .catch(function(e) {
+                            console.warn("⚠️ 輪詢錯誤:", e.message);
                             if (attempts < maxAttempts) {
-                                setTimeout(pollReply, 3000);
+                                currentPollTimer = setTimeout(pollReply, 5000);
                             } else {
+                                currentPollTimer = null;
                                 onFail("minds_error", e.message);
                             }
                         });
                     }
 
-                    setTimeout(pollReply, 5000);
+                    currentPollTimer = setTimeout(pollReply, 5000);
                 });
             })
             .catch(function(e) {
                 console.warn("⚠️ 失敗:", e.message);
+                currentPollTimer = null;
                 onFail("minds_error", e.message);
             });
         }
@@ -501,7 +530,6 @@
             var statusText = "";
 
             if (isHot) {
-                // 爆款路線：熱門遊戲
                 modeLabel = "高觀看率爆款";
                 statusColor = "#66c0f4";
                 statusText = "🎮 <strong>[Steam 熱門榜]</strong> Minds AI 已搜尋當前在線人數最高的遊戲";
@@ -519,7 +547,6 @@
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
             } else {
-                // 冷門路線：在線人數少但好評率高的單機遊戲
                 modeLabel = "冷門好評單機";
                 statusColor = "#34d399";
                 statusText = "💎 <strong>[冷門好評單機]</strong> Minds AI 已搜尋在線人數少但好評率極高的單機遊戲";
@@ -539,7 +566,7 @@
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
             }
 
-            showLoading((isHot ? "🤖 Minds AI 正在搜尋 Steam 熱門遊戲..." : "💎 Minds AI 正在搜尋冷門好評單機遊戲...") + "\n（可能需要 10-60 秒）");
+            showLoading((isHot ? "🤖 Minds AI 正在搜尋 Steam 熱門遊戲..." : "💎 Minds AI 正在搜尋冷門好評單機遊戲...") + "\n（可能需要 10-60 秒，最長等待 300 秒）");
 
             callMinds(prompt,
                 function(text) {
@@ -572,7 +599,6 @@
             var statusText = "";
 
             if (isHot) {
-                // 爆款路線：即將推出的高討論度遊戲
                 modeLabel = "高觀看率爆款";
                 statusColor = "#c084fc";
                 statusText = "🚀 <strong>[Steam 即將推出]</strong> Minds AI 已搜尋高討論度遊戲";
@@ -595,7 +621,6 @@
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
             } else {
-                // 冷門路線：即將推出的小眾單機遊戲
                 modeLabel = "冷門好評單機";
                 statusColor = "#34d399";
                 statusText = "💎 <strong>[即將推出冷門單機]</strong> Minds AI 已搜尋小眾但備受期待的單機遊戲";
@@ -621,7 +646,7 @@
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線，方便直接拿去做影片。";
             }
 
-            showLoading((isHot ? "🚀 Minds AI 正在搜尋即將推出的熱門遊戲..." : "💎 Minds AI 正在搜尋即將推出的冷門單機遊戲...") + "\n（可能需要 10-60 秒）");
+            showLoading((isHot ? "🚀 Minds AI 正在搜尋即將推出的熱門遊戲..." : "💎 Minds AI 正在搜尋即將推出的冷門單機遊戲...") + "\n（可能需要 10-60 秒，最長等待 300 秒）");
 
             callMinds(prompt,
                 function(text) {
