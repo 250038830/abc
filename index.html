@@ -136,7 +136,6 @@
         }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
-
         /* ===== 聊天界面 ===== */
         .chat-container {
             display: flex;
@@ -327,31 +326,25 @@
     <div class="container">
         <h1>Viral Game Content Agent</h1>
         <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 可持續對話討論企劃</div>
-
         <div class="main-layout">
             <div class="control-panel">
                 <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
-
                 <label class="label">搜尋模式</label>
                 <select id="styleSelect" class="input-field">
                     <option value="high">🔥 爆款路線（熱門遊戲）</option>
                     <option value="low">🧊 冷門好評單機（在線人數少但好評率高）</option>
                 </select>
                 <div class="hint">爆款 = 熱門遊戲；冷門 = 在線人數少但好評率高的單機遊戲</div>
-
                 <div class="divider"><span>一鍵生成企劃</span></div>
-
                 <button type="button" class="btn btn-hot" onclick="onHotClick()">
                     🔥 當前遊戲
                     <div class="btn-hint">搜尋目前正在發售的遊戲</div>
                 </button>
-
                 <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
                     🚀 即將推出
                     <div class="btn-hint">搜尋未來 3-6 個月內發售的遊戲</div>
                 </button>
             </div>
-
             <div class="chat-panel">
                 <div class="chat-container">
                     <div class="chat-header">
@@ -381,27 +374,20 @@
             </div>
         </div>
     </div>
-
     <script>
         console.log("0️⃣ 腳本開始加載...");
-
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
-
         var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
-
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
-
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
         if (HAS_PROXY) {
             document.getElementById("proxyStatus").className = "proxy-status proxy-ok";
             document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
         }
         console.log("1️⃣ 代理狀態：" + (HAS_PROXY ? "已配置 ✅ " + PROXY_BASE : "未配置 ⚠️"));
-
         // 全局：當前輪詢定時器
         var currentPollTimer = null;
         var currentRequestId = 0;
-
         // ===== 聊天界面函數 =====
         function addMessage(role, html) {
             var container = document.getElementById("chatMessages");
@@ -423,7 +409,6 @@
             container.scrollTop = container.scrollHeight;
             return contentDiv;
         }
-
         function showTyping() {
             var container = document.getElementById("chatMessages");
             var msgDiv = document.createElement("div");
@@ -433,48 +418,40 @@
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
         }
-
         function removeTyping() {
             var el = document.getElementById("typingIndicator");
             if (el) el.remove();
         }
-
         function setInputEnabled(enabled) {
             document.getElementById("chatInput").disabled = !enabled;
             document.getElementById("sendBtn").disabled = !enabled;
         }
-
         function newChat() {
             if (confirm("確定要開始新對話嗎？\n\n本地聊天記錄會被清空。\n（Minds 端對話歷史保留，AI 仍記得之前的內容）")) {
                 document.getElementById("chatMessages").innerHTML =
                     '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論<br>🔄 我會記住對話上下文，延續討論</div></div></div>';
             }
         }
-
         // ✅ callMinds：時間戳檢測 + 自動取消上一個輪詢
         function callMinds(prompt, onSuccess, onFail) {
             if (!HAS_PROXY) {
                 onFail("proxy_not_configured");
                 return;
             }
-
             if (currentPollTimer) {
                 clearTimeout(currentPollTimer);
                 currentPollTimer = null;
                 console.log("🛑 已取消上一個輪詢");
             }
             var myRequestId = ++currentRequestId;
-
             console.log("🤖 發送消息到 Minds...");
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
-
             fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(beforeData) {
                 var beforeCreatedAt = beforeData.createdAt || "";
                 console.log("📋 發送前基準時間:", beforeCreatedAt);
-
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
@@ -491,13 +468,11 @@
                     console.log("✅ 消息已發送，開始輪詢回覆...");
                     var attempts = 0;
                     var maxAttempts = 60;
-
                     function pollReply() {
                         if (myRequestId !== currentRequestId) {
                             console.log("🛑 輪詢被新請求取代，停止");
                             return;
                         }
-
                         attempts++;
                         fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
                         .then(function(r) { return r.json(); })
@@ -505,7 +480,6 @@
                             var reply = data.reply || "";
                             var createdAt = data.createdAt || "";
                             console.log("📡 輪詢 #" + attempts + ", 時間:", createdAt, ", 長度:", reply.length);
-
                             if (reply && createdAt && createdAt !== beforeCreatedAt) {
                                 console.log("✅ 收到新 AI 回覆");
                                 currentPollTimer = null;
@@ -527,7 +501,6 @@
                             }
                         });
                     }
-
                     currentPollTimer = setTimeout(pollReply, 5000);
                 });
             })
@@ -537,19 +510,16 @@
                 onFail("minds_error", e.message);
             });
         }
-
         // 💬 用戶手動發送訊息
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
             var text = input.value.trim();
             if (!text) return;
-
             input.value = "";
             setInputEnabled(false);
             addMessage("user", text);
             showTyping();
-
-            callMinds(text,
+            callMinds(text + "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。",
                 function(reply) {
                     removeTyping();
                     addMessage("ai", reply);
@@ -568,18 +538,14 @@
                 }
             );
         }
-
         // 🔥 當前遊戲
         function onHotClick() {
             console.log("🎯 當前遊戲按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
-
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
-
             var prompt = "";
             var userMsg = "";
-
             if (isHot) {
                 userMsg = "🎮 <strong>[爆款路線]</strong> 搜尋當前 Steam 熱門遊戲並生成影片企劃";
                 prompt = "你是一個遊戲內容創作助手。請搜尋並列出目前 Steam 平台上在線人數最高的熱門遊戲（前5名），";
@@ -593,6 +559,7 @@
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線。";
+                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
             } else {
                 userMsg = "💎 <strong>[冷門好評單機]</strong> 搜尋當前在線人數少但好評率高的單機遊戲並生成企劃";
                 prompt = "你是一個遊戲內容創作助手。請搜尋目前 Steam 平台上在線人數較少（小眾）但好評率極高（壓倒性好評/特別好評）的單機遊戲（前5名），";
@@ -607,12 +574,11 @@
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線。";
+                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
             }
-
             setInputEnabled(false);
             addMessage("user", userMsg);
             showTyping();
-
             callMinds(prompt,
                 function(text) {
                     removeTyping();
@@ -630,18 +596,14 @@
                 }
             );
         }
-
         // 🚀 即將推出
         function onUpcomingClick() {
             console.log("🎯 即將推出按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
-
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
-
             var prompt = "";
             var userMsg = "";
-
             if (isHot) {
                 userMsg = "🚀 <strong>[爆款路線]</strong> 搜尋即將推出的高討論度遊戲並生成影片企劃";
                 prompt = "你是一個遊戲內容創作助手。請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲，";
@@ -656,6 +618,7 @@
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線。";
+                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
             } else {
                 userMsg = "💎 <strong>[冷門好評單機]</strong> 搜尋即將推出的小眾高潛力單機遊戲並生成企劃";
                 prompt = "你是一個遊戲內容創作助手。請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的小眾單機遊戲，";
@@ -671,12 +634,11 @@
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
                 prompt += "5. 影片大綱（3-5個重點段落）\n\n";
                 prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線。";
+                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
             }
-
             setInputEnabled(false);
             addMessage("user", userMsg);
             showTyping();
-
             callMinds(prompt,
                 function(text) {
                     removeTyping();
@@ -694,7 +656,6 @@
                 }
             );
         }
-
         console.log("✅ 腳本加載完成，代理狀態：" + (HAS_PROXY ? "已配置 ✅" : "未配置 ⚠️"));
     </script>
 </body>
