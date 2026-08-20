@@ -361,6 +361,7 @@
             <div class="control-panel">
                 <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
 
+
                 <!-- ===== AI 定時自主生成區域 ===== -->
                 <div class="auto-section">
                     <div class="auto-title">🤖 AI 定時自主生成</div>
@@ -370,7 +371,12 @@
                         📄 查看最新自主企劃
                         <div class="btn-hint">AI 到點自動生成，無需手動按鈕</div>
                     </button>
+                    <button type="button" id="runNowBtn" class="btn btn-auto" style="margin-top:8px;">
+                        ▶️ Run now 手動觸發自主生成
+                        <div class="btn-hint">測試定時生成邏輯</div>
+                    </button>
                 </div>
+
 
                 <label class="label">搜尋模式</label>
                 <select id="styleSelect" class="input-field">
@@ -421,7 +427,7 @@
     <script>
         console.log("0️⃣ 腳本開始加載...");
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev/";
-        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
+        var MINDS_KEY = "";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
         if (HAS_PROXY) {
@@ -430,10 +436,12 @@
         }
         console.log("1️⃣ 代理狀態：" + (HAS_PROXY ? "已配置 ✅ " + PROXY_BASE : "未配置 ⚠️"));
 
+
         // 全局：當前輪詢定時器
         var currentPollTimer = null;
         var currentRequestId = 0;
         var cachedAutoPlan = null;
+
 
         // ===== 聊天界面函數 =====
         function addMessage(role, html) {
@@ -480,6 +488,21 @@
             }
         }
 
+        //手動觸發自主生成
+        document.getElementById("runNowBtn").addEventListener("click",async function(){
+            console.log("🎯 Run now 手動觸發自主生成");
+            try{
+                const res = await fetch(PROXY_BASE+"/trigger-auto");
+                const ret = await res.json();
+                console.log("trigger-auto返回：",ret);
+                alert(ret.msg || ret.error);
+                setTimeout(checkAutoPlan,1500);
+            }catch(err){
+                alert("觸發失敗："+err.message);
+            }
+        });
+
+
         // ===== 檢查自主生成狀態 =====
         function checkAutoPlan() {
             if (!HAS_PROXY) {
@@ -492,6 +515,7 @@
                 var statusEl = document.getElementById("autoStatus");
                 var timeEl = document.getElementById("autoTime");
                 var btn = document.getElementById("autoViewBtn");
+
 
                 if (data.latest && data.latest.content) {
                     cachedAutoPlan = data.latest;
@@ -521,12 +545,14 @@
             });
         }
 
+
         // ===== 查看自主企劃 =====
         function viewAutoPlan() {
             if (!cachedAutoPlan) return;
             addMessage("user", "🤖 <strong>[AI 定時自主生成]</strong> 查看最新自動企劃");
             addMessage("ai", cachedAutoPlan.content);
         }
+
 
         // ✅ callMinds：時間戳檢測 + 自動取消上一個輪詢
         function callMinds(prompt, onSuccess, onFail) {
@@ -607,6 +633,7 @@
             });
         }
 
+
         // 💬 用戶手動發送訊息
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
@@ -636,6 +663,7 @@
                 }
             );
         }
+
 
         // 🔥 當前遊戲
         function onHotClick() {
@@ -694,6 +722,7 @@
                 }
             );
         }
+
 
         // 🚀 即將推出
         function onUpcomingClick() {
@@ -755,8 +784,14 @@
             );
         }
 
+
         // 頁面加載後檢查自主生成狀態
         setTimeout(checkAutoPlan, 800);
+        //每8秒自動刷新自主生成狀態
+        setInterval(()=>{
+            if(HAS_PROXY) checkAutoPlan();
+        },8000);
+
 
         console.log("✅ 腳本加載完成，代理狀態：" + (HAS_PROXY ? "已配置 ✅" : "未配置 ⚠️"));
     </script>
