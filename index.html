@@ -119,10 +119,8 @@
                     <button id="btnSendChat">發送</button>
                 </div>
             </div>
-
             <div class="log-area" id="logBox"></div>
         </div>
-
         <div class="panel">
             <h3>📄 AI輸出結果</h3>
             <div class="output-box" id="resultBox"></div>
@@ -132,7 +130,6 @@
 
 <script>
 // ====================== 配置區 ======================
-// ✅ PROXY_BASE 結尾絕對不能帶斜線
 const PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
 
 let currentAlias = null;
@@ -149,11 +146,9 @@ function log(msg){
     console.log(msg);
 }
 
-// 頁載入
 log("0️⃣ 腳本開始加載...");
 log(`1️⃣ 代理狀態：已配置 ✅ ${PROXY_BASE}`);
 
-// 輪詢自動計劃，每10秒
 async function checkAutoPlan(){
     try{
         const res = await fetch(PROXY_BASE + "/get-auto",{
@@ -165,6 +160,9 @@ async function checkAutoPlan(){
         if(json.pending){
             log("🤖 偵測到待執行自動任務");
         }
+        if(json.latest && json.latest.content){
+            resultBox.innerHTML = json.latest.content;
+        }
     }catch(e){
         log("checkAutoPlan 錯誤:"+e.message);
     }
@@ -172,7 +170,6 @@ async function checkAutoPlan(){
 
 autoCheckTimer = setInterval(checkAutoPlan,10000);
 
-// 呼叫minds send
 async function callMindsSend(prompt){
     log("🤖 發送消息到 Minds...");
     log(`📝 Prompt片段: ${prompt.substring(0,120)}...`);
@@ -199,7 +196,7 @@ async function callMindsSend(prompt){
     return j;
 }
 
-// 輪詢讀取reply
+// ✅ 修復：Worker返回是物件不是陣列
 async function pollReply(alias, maxWaitMs=300000){
     const start = Date.now();
     while(Date.now() - start < maxWaitMs){
@@ -210,18 +207,14 @@ async function pollReply(alias, maxWaitMs=300000){
             body:JSON.stringify({alias:alias})
         });
         if(!res.ok) continue;
-        const arr = await res.json();
-        if(!Array.isArray(arr)) continue;
-        //取最後一條ai回覆
-        const aiMsg = arr.filter(x=>x.senderType===2).pop();
-        if(aiMsg && aiMsg.content){
-            return aiMsg.content;
+        const obj = await res.json();
+        if(obj.reply && obj.reply.trim() !== ""){
+            return obj.reply;
         }
     }
     throw new Error("輪詢等待超時");
 }
 
-// 按鈕：Steam熱門榜
 document.getElementById("btnHot").onclick = async ()=>{
     try{
         log("🎯 熱門榜按鈕被點擊");
@@ -238,7 +231,6 @@ document.getElementById("btnHot").onclick = async ()=>{
     }
 };
 
-//按鈕：即將推出
 document.getElementById("btnUpcoming").onclick = async ()=>{
     try{
         log("🎯 即將推出按鈕被點擊");
@@ -255,7 +247,6 @@ document.getElementById("btnUpcoming").onclick = async ()=>{
     }
 };
 
-//按鈕：在線人數少高評價單機
 document.getElementById("btnLowPopGoodReview").onclick = async ()=>{
     try{
         log("🎯 小眾高評單機按鈕被點擊");
@@ -272,7 +263,6 @@ document.getElementById("btnLowPopGoodReview").onclick = async ()=>{
     }
 };
 
-//手動觸發auto
 document.getElementById("btnTriggerAuto").onclick = async ()=>{
     try{
         log("▶️ 手動觸發自動生成");
@@ -289,7 +279,6 @@ document.getElementById("btnTriggerAuto").onclick = async ()=>{
     }
 };
 
-//聊天發送
 document.getElementById("btnSendChat").onclick = async ()=>{
     const inputDom = document.getElementById("chatInput");
     const text = inputDom.value.trim();
