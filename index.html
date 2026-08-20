@@ -423,7 +423,7 @@
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
         var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
-        var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
+        var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "https://winter-disk-958a.chunyin743.workers.dev" && PROXY_BASE.length > 10;
         if (HAS_PROXY) {
             document.getElementById("proxyStatus").className = "proxy-status proxy-ok";
             document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
