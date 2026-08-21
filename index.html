@@ -100,6 +100,8 @@
         .btn-hot:hover { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); }
         .btn-upcoming { background: linear-gradient(135deg, #a855f7, #6366f1); }
         .btn-upcoming:hover { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4); }
+        .btn-news { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+        .btn-news:hover { box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4); }
         .hint {
             font-size: 12px;
             color: #6b7280;
@@ -344,6 +346,10 @@
                     🚀 即將推出
                     <div class="btn-hint">搜尋未來 3-6 個月內發售的遊戲</div>
                 </button>
+                <button type="button" class="btn btn-news" onclick="onNewsClick()">
+                    📰 每日遊戲新聞
+                    <div class="btn-hint">整理當前最新 5 則遊戲新聞</div>
+                </button>
             </div>
             <div class="chat-panel">
                 <div class="chat-container">
@@ -360,6 +366,7 @@
                                 <div class="welcome-msg">
                                     你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>
                                     🎮 點擊左側按鈕一鍵生成遊戲企劃<br>
+                                    📰 點擊「每日遊戲新聞」獲取最新 5 則新聞<br>
                                     💬 或直接在下方輸入訊息跟我討論<br>
                                     🔄 我會記住對話上下文，延續討論
                                 </div>
@@ -380,15 +387,15 @@
         var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
+        
         if (HAS_PROXY) {
             document.getElementById("proxyStatus").className = "proxy-status proxy-ok";
             document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
         }
-        console.log("1️⃣ 代理狀態：" + (HAS_PROXY ? "已配置 ✅ " + PROXY_BASE : "未配置 ⚠️"));
-        // 全局：當前輪詢定時器
+        
         var currentPollTimer = null;
         var currentRequestId = 0;
-        // ===== 聊天界面函數 =====
+
         function addMessage(role, html) {
             var container = document.getElementById("chatMessages");
             var msgDiv = document.createElement("div");
@@ -396,19 +403,12 @@
             var contentDiv = document.createElement("div");
             contentDiv.className = "message-content";
             contentDiv.innerHTML = html;
-            if (role === "ai") {
-                var allElements = contentDiv.querySelectorAll("*");
-                for (var i = 0; i < allElements.length; i++) {
-                    allElements[i].style.background = "";
-                    allElements[i].style.backgroundColor = "";
-                    allElements[i].style.color = "";
-                }
-            }
             msgDiv.appendChild(contentDiv);
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
             return contentDiv;
         }
+
         function showTyping() {
             var container = document.getElementById("chatMessages");
             var msgDiv = document.createElement("div");
@@ -418,127 +418,86 @@
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
         }
+
         function removeTyping() {
             var el = document.getElementById("typingIndicator");
             if (el) el.remove();
         }
+
         function setInputEnabled(enabled) {
             document.getElementById("chatInput").disabled = !enabled;
             document.getElementById("sendBtn").disabled = !enabled;
         }
+
         function newChat() {
-            if (confirm("確定要開始新對話嗎？\n\n本地聊天記錄會被清空。\n（Minds 端對話歷史保留，AI 仍記得之前的內容）")) {
+            if (confirm("確定要開始新對話嗎？\n\n本地聊天記錄會被清空。")) {
                 document.getElementById("chatMessages").innerHTML =
-                    '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論<br>🔄 我會記住對話上下文，延續討論</div></div></div>';
+                    '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論</div></div></div>';
             }
         }
-        // ✅ callMinds：時間戳檢測 + 自動取消上一個輪詢
+
         function callMinds(prompt, onSuccess, onFail) {
-            if (!HAS_PROXY) {
-                onFail("proxy_not_configured");
-                return;
-            }
-            if (currentPollTimer) {
-                clearTimeout(currentPollTimer);
-                currentPollTimer = null;
-                console.log("🛑 已取消上一個輪詢");
-            }
+            if (!HAS_PROXY) { onFail("proxy_not_configured"); return; }
+            if (currentPollTimer) { clearTimeout(currentPollTimer); currentPollTimer = null; }
             var myRequestId = ++currentRequestId;
-            console.log("🤖 發送消息到 Minds...");
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
+            
             fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(beforeData) {
                 var beforeCreatedAt = beforeData.createdAt || "";
-                console.log("📋 發送前基準時間:", beforeCreatedAt);
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
                     body: JSON.stringify({ mindId: MIND_ID, messageText: messageText })
                 })
                 .then(function(r) {
-                    console.log("📡 發送狀態:", r.status);
                     return r.text().then(function(text) {
                         if (!r.ok) throw new Error("Send failed: " + text);
                         return JSON.parse(text);
                     });
                 })
                 .then(function() {
-                    console.log("✅ 消息已發送，開始輪詢回覆...");
                     var attempts = 0;
                     var maxAttempts = 60;
                     function pollReply() {
-                        if (myRequestId !== currentRequestId) {
-                            console.log("🛑 輪詢被新請求取代，停止");
-                            return;
-                        }
+                        if (myRequestId !== currentRequestId) return;
                         attempts++;
                         fetch(PROXY_BASE + "/minds/reply", { method: "POST", headers: headers })
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             var reply = data.reply || "";
                             var createdAt = data.createdAt || "";
-                            console.log("📡 輪詢 #" + attempts + ", 時間:", createdAt, ", 長度:", reply.length);
                             if (reply && createdAt && createdAt !== beforeCreatedAt) {
-                                console.log("✅ 收到新 AI 回覆");
                                 currentPollTimer = null;
                                 onSuccess(reply);
                             } else if (attempts < maxAttempts) {
-                                currentPollTimer = setTimeout(pollReply, 5000);
+                                currentPollTimer = setTimeout(pollReply, 6000);
                             } else {
                                 currentPollTimer = null;
                                 onFail("timeout");
                             }
                         })
                         .catch(function(e) {
-                            console.warn("⚠️ 輪詢錯誤:", e.message);
                             if (attempts < maxAttempts) {
-                                currentPollTimer = setTimeout(pollReply, 5000);
+                                currentPollTimer = setTimeout(pollReply, 6000);
                             } else {
                                 currentPollTimer = null;
                                 onFail("minds_error", e.message);
                             }
                         });
                     }
-                    currentPollTimer = setTimeout(pollReply, 5000);
+                    currentPollTimer = setTimeout(pollReply, 6000);
                 });
             })
             .catch(function(e) {
-                console.warn("⚠️ 失敗:", e.message);
                 currentPollTimer = null;
                 onFail("minds_error", e.message);
             });
         }
-        // 💬 用戶手動發送訊息
-        function sendChatMessage() {
-            var input = document.getElementById("chatInput");
-            var text = input.value.trim();
-            if (!text) return;
-            input.value = "";
-            setInputEnabled(false);
-            addMessage("user", text);
-            showTyping();
-            callMinds(text + "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。",
-                function(reply) {
-                    removeTyping();
-                    addMessage("ai", reply);
-                    setInputEnabled(true);
-                    input.focus();
-                },
-                function(errorType, detail) {
-                    removeTyping();
-                    var msg = "❌ 錯誤：";
-                    if (errorType === "timeout") msg += "AI 回覆超時（超過 300 秒），請稍後重試。";
-                    else if (errorType === "proxy_not_configured") msg += "代理未配置。";
-                    else msg += (detail || errorType);
-                    addMessage("ai", msg);
-                    setInputEnabled(true);
-                    input.focus();
-                }
-            );
-        }
-        // 🔥 當前遊戲
+
+        // 🔥 當前遊戲 (完整保留)
         function onHotClick() {
             console.log("🎯 當前遊戲按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
@@ -596,7 +555,8 @@
                 }
             );
         }
-        // 🚀 即將推出
+
+        // 🚀 即將推出 (完整保留)
         function onUpcomingClick() {
             console.log("🎯 即將推出按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
@@ -656,7 +616,53 @@
                 }
             );
         }
-        console.log("✅ 腳本加載完成，代理狀態：" + (HAS_PROXY ? "已配置 ✅" : "未配置 ⚠️"));
+
+        // 📰 每日遊戲新聞 Top 5
+        function onNewsClick() {
+            if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置。"); return; }
+            var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
+            prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n\n";
+            prompt += "請用繁體中文回答，格式清晰，每則新聞之間請用分隔線隔開。\n\n【重要規則】只輸出這 5 則遊戲新聞本身，不要輸出任何內部調度日誌。";
+
+            setInputEnabled(false);
+            addMessage("user", "📰 <strong>[每日遊戲快訊]</strong> 正在整理當前最新 5 則遊戲新聞...");
+            showTyping();
+            
+            callMinds(prompt,
+                function(text) {
+                    removeTyping();
+                    addMessage("ai", "<h2>🔥 今日精選遊戲新聞 Top 5</h2><hr>" + text);
+                    setInputEnabled(true);
+                },
+                function(errorType, detail) {
+                    removeTyping();
+                    addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                    setInputEnabled(true);
+                }
+            );
+        }
+
+        function sendChatMessage() {
+            var input = document.getElementById("chatInput");
+            var text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            setInputEnabled(false);
+            addMessage("user", text);
+            showTyping();
+            callMinds(text, function(reply) {
+                removeTyping();
+                addMessage("ai", reply);
+                setInputEnabled(true);
+                input.focus();
+            }, function(errorType, detail) {
+                removeTyping();
+                addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                setInputEnabled(true);
+                input.focus();
+            });
+        }
+        console.log("✅ 腳本加載完成");
     </script>
 </body>
 </html>
