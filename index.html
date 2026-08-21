@@ -89,13 +89,13 @@
     <div class="btn-group">
         <button id="btnHot">🔥 Steam當前熱門榜</button>
         <button id="btnUpcoming">📅 即將推出熱門遊戲</button>
-        <button id="btnLowPopGoodReview">⭐ 在線人數少但好評高單機遊戲</button>
+        <button id="btnLowPopHighReview">⭐ 在線人數少但好評高單機遊戲</button>
     </div>
 
     <div class="two-column">
         <div>
             <h3>📝 AI生成企劃</h3>
-            <div class="output-box" id="aiOutput"></div>
+            <div class="output-box" id="aiResult"></div>
         </div>
         <div>
             <h3>💬 對話繼續討論企劃</h3>
@@ -111,14 +111,13 @@
 
 <script>
 const WORKER_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
-const MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
 const ALIAS = "webapp:thread-1786952803988-6ka4jx";
 const POLL_INTERVAL = 2200;
 const MAX_POLL = 130;
 
 const $ = s=>document.querySelector(s);
 const logEl = $("#consoleLog");
-const aiOutputEl = $("#aiOutput");
+const aiResultEl = $("#aiResult");
 const chatBoxEl = $("#chatBox");
 
 function log(msg){
@@ -127,7 +126,12 @@ function log(msg){
     logEl.scrollTop = logEl.scrollHeight;
 }
 
-async function callMinds(prompt,alias){
+async function fetchHistory(alias){
+    const resp = await fetch(`${WORKER_BASE}/minds/history?alias=${encodeURIComponent(alias)}`);
+    return await resp.json();
+}
+
+async function callMindsSend(prompt, alias){
     log("🤖 透過 Worker 調用 Minds API...");
     const resp = await fetch(`${WORKER_BASE}/minds/send`,{
         method:"POST",
@@ -144,14 +148,12 @@ async function callMinds(prompt,alias){
     return json;
 }
 
-async function fetchHistory(alias){
-    const resp = await fetch(`${WORKER_BASE}/minds/history?alias=${encodeURIComponent(alias)}`);
-    return await resp.json();
-}
-
-async function pollReply(alias,beforeMsgCount){
+async function pollReply(alias, beforeMsgCount){
     for(let i=0;i<MAX_POLL;i++){
         const hist = await fetchHistory(alias);
+        if(hist.error){
+            throw new Error(`History API錯誤：${hist.error}`);
+        }
         if(!Array.isArray(hist)){
             log("⚠️ history返回非陣列");
             await sleep(POLL_INTERVAL);
@@ -174,20 +176,20 @@ function sleep(ms){
 
 async function runPrompt(prompt){
     try{
-        aiOutputEl.innerHTML = "<em>等待AI回覆...</em>";
-        log("🎯執行prompt");
+        aiResultEl.innerHTML = "<em>等待AI回覆...</em>";
+        log("🎯 執行prompt");
         log(`📝Prompt片段：${prompt.substring(0,120)}...`);
 
         const preHist = await fetchHistory(ALIAS);
         const preCount = Array.isArray(preHist) ? preHist.filter(x=>x.senderType===2).length : 0;
 
-        await callMinds(prompt,ALIAS);
-        const replyHtml = await pollReply(ALIAS,preCount);
-        aiOutputEl.innerHTML = replyHtml;
+        await callMindsSend(prompt, ALIAS);
+        const replyHtml = await pollReply(ALIAS, preCount);
+        aiResultEl.innerHTML = replyHtml;
         log("✅取得AI企劃完成");
     }catch(err){
         log(`❌錯誤:${err.message}`);
-        aiOutputEl.innerHTML = `<span style="color:#f87171">執行失敗：${err.message}</span>`;
+        aiResultEl.innerHTML = `<span style="color:#f87171">執行失敗：${err.message}</span>`;
     }
 }
 
@@ -203,8 +205,8 @@ $("#btnUpcoming").onclick = async ()=>{
     await runPrompt(prompt);
 };
 
-$("#btnLowPopGoodReview").onclick = async ()=>{
-    const prompt = `你是遊戲內容創作助手。尋找Steam平台在線人數較少但是玩家好評率很高的單機遊戲，列出前五款，名稱、好評率、遊戲類型。挑選一款適合做爆款短影片，生成完整影片企劃、30秒開場Hook講稿，繁體中文，不要輸出無關系統資訊。`;
+$("#btnLowPopHighReview").onclick = async ()=>{
+    const prompt = `你是遊戲內容創作助手。尋找Steam平台在線人數較少但是玩家好評率很高的單機遊戲，列出前五款，名稱、好評率、遊戲類型。挑選一款適合做爆款短影片，生成完整影片企劃、30秒開場Hook講稿，繁體中文，不要輸出無關資訊。`;
     await runPrompt(prompt);
 };
 
@@ -216,7 +218,7 @@ $("#btnSendChat").onclick = async ()=>{
     try{
         const preHist = await fetchHistory(ALIAS);
         const preCount = Array.isArray(preHist)?preHist.filter(x=>x.senderType===2).length:0;
-        await callMinds(text,ALIAS);
+        await callMindsSend(text,ALIAS);
         const replyHtml = await pollReply(ALIAS,preCount);
         chatBoxEl.innerHTML += `<div style="margin-top:8px;">🤖${replyHtml}</div>`;
         chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
