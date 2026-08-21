@@ -110,12 +110,11 @@
 </div>
 
 <script>
+const WORKER_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
 const MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
 const ALIAS = "webapp:thread-1786952803988-6ka4jx";
 const POLL_INTERVAL = 2200;
 const MAX_POLL = 130;
-
-const WORKER_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
 
 const $ = s=>document.querySelector(s);
 const logEl = $("#consoleLog");
@@ -129,10 +128,9 @@ function log(msg){
 }
 
 async function callMinds(prompt,alias){
-    log("🤖 前端直接呼叫Minds API");
-    const resp = await fetch(`https://api.hellominds.ai/v1/messaging/message?mindId=${MIND_ID}`,{
+    log("🤖 透過 Worker 調用 Minds API...");
+    const resp = await fetch(`${WORKER_BASE}/minds/send`,{
         method:"POST",
-        credentials:"include",
         headers:{
             "Content-Type":"application/json"
         },
@@ -147,10 +145,7 @@ async function callMinds(prompt,alias){
 }
 
 async function fetchHistory(alias){
-    const resp = await fetch(`https://api.hellominds.ai/v1/messaging/histories/${alias}?limit=20`,{
-        method:"GET",
-        credentials:"include"
-    });
+    const resp = await fetch(`${WORKER_BASE}/minds/history?alias=${encodeURIComponent(alias)}`);
     return await resp.json();
 }
 
@@ -234,7 +229,9 @@ function escapeHtml(str){
     return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-log("0️⃣頁面已載入完成，Minds改為前端直接呼叫，需同一瀏覽器登入app.hellominds.ai");
+log("0️⃣ 腳本開始加載...");
+log(`1️⃣ 代理狀態：已配置 ✅ ${WORKER_BASE}`);
+log("✅ 腳本加載完成，代理狀態：已配置 ✅");
 </script>
 </body>
 </html>
