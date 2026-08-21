@@ -100,8 +100,6 @@
         .btn-hot:hover { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); }
         .btn-upcoming { background: linear-gradient(135deg, #a855f7, #6366f1); }
         .btn-upcoming:hover { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4); }
-        .btn-auto { background: linear-gradient(135deg, #10b981, #06b6d4); margin-top: 8px; }
-        .btn-auto:hover { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
         .hint {
             font-size: 12px;
             color: #6b7280;
@@ -138,30 +136,6 @@
         }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
-        /* ===== 自主生成區域 ===== */
-        .auto-section {
-            background: rgba(16, 185, 129, 0.06);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 10px;
-            padding: 14px;
-            margin-top: 16px;
-        }
-        .auto-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #34d399;
-            margin-bottom: 8px;
-        }
-        .auto-status {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-bottom: 4px;
-        }
-        .auto-time {
-            font-size: 11px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
         /* ===== 聊天界面 ===== */
         .chat-container {
             display: flex;
@@ -370,16 +344,6 @@
                     🚀 即將推出
                     <div class="btn-hint">搜尋未來 3-6 個月內發售的遊戲</div>
                 </button>
-                <!-- ===== 新增：AI 自主生成區域 ===== -->
-                <div class="divider"><span>🤖 自主執行</span></div>
-                <div class="auto-section">
-                    <div class="auto-title">🤖 AI 定時自主生成</div>
-                    <div id="autoStatus" class="auto-status">檢查中...</div>
-                    <div id="autoTime" class="auto-time"></div>
-                    <button id="autoViewBtn" class="btn btn-auto" onclick="viewAutoPlan()" style="display:none">
-                        查看最新自主企劃
-                    </button>
-                </div>
             </div>
             <div class="chat-panel">
                 <div class="chat-container">
@@ -397,8 +361,7 @@
                                     你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>
                                     🎮 點擊左側按鈕一鍵生成遊戲企劃<br>
                                     💬 或直接在下方輸入訊息跟我討論<br>
-                                    🔄 我會記住對話上下文，延續討論<br>
-                                    ⏰ 我每天會定時自動生成最新熱門遊戲企劃
+                                    🔄 我會記住對話上下文，延續討論
                                 </div>
                             </div>
                         </div>
@@ -422,11 +385,9 @@
             document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
         }
         console.log("1️⃣ 代理狀態：" + (HAS_PROXY ? "已配置 ✅ " + PROXY_BASE : "未配置 ⚠️"));
-
+        // 全局：當前輪詢定時器
         var currentPollTimer = null;
         var currentRequestId = 0;
-        var autoPlanContent = null;
-
         // ===== 聊天界面函數 =====
         function addMessage(role, html) {
             var container = document.getElementById("chatMessages");
@@ -468,48 +429,15 @@
         function newChat() {
             if (confirm("確定要開始新對話嗎？\n\n本地聊天記錄會被清空。\n（Minds 端對話歷史保留，AI 仍記得之前的內容）")) {
                 document.getElementById("chatMessages").innerHTML =
-                    '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論<br>🔄 我會記住對話上下文，延續討論<br>⏰ 我每天會定時自動生成最新熱門遊戲企劃</div></div></div>';
+                    '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論<br>🔄 我會記住對話上下文，延續討論</div></div></div>';
             }
         }
-
-        // ===== AI 自主生成檢查 =====
-        function checkAutoPlan() {
+        // ✅ callMinds：時間戳檢測 + 自動取消上一個輪詢
+        function callMinds(prompt, onSuccess, onFail) {
             if (!HAS_PROXY) {
-                document.getElementById("autoStatus").textContent = "⚠️ 代理未配置";
+                onFail("proxy_not_configured");
                 return;
             }
-            fetch(PROXY_BASE + "/api/auto-plan")
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.pending && data.pending.sentAt) {
-                    document.getElementById("autoStatus").textContent = "⏳ AI 正在生成中...";
-                    document.getElementById("autoTime").textContent = "發送時間：" + new Date(data.pending.sentAt).toLocaleString("zh-TW");
-                    document.getElementById("autoViewBtn").style.display = "none";
-                } else if (data.latest && data.latest.content) {
-                    autoPlanContent = data.latest.content;
-                    document.getElementById("autoStatus").textContent = "✅ 最新自主企劃已就緒";
-                    document.getElementById("autoTime").textContent = "生成時間：" + new Date(data.latest.createdAt).toLocaleString("zh-TW");
-                    document.getElementById("autoViewBtn").style.display = "block";
-                } else {
-                    document.getElementById("autoStatus").textContent = "📋 尚未有自主生成紀錄";
-                    document.getElementById("autoTime").textContent = "定時任務會在設定時間自動執行";
-                    document.getElementById("autoViewBtn").style.display = "none";
-                }
-            })
-            .catch(function(e) {
-                document.getElementById("autoStatus").textContent = "❌ 檢查失敗：" + e.message;
-            });
-        }
-        function viewAutoPlan() {
-            if (autoPlanContent) {
-                addMessage("user", "🤖 <strong>[AI 自主生成]</strong> 查看最新自動生成的遊戲企劃");
-                addMessage("ai", autoPlanContent);
-            }
-        }
-
-        // ===== callMinds =====
-        function callMinds(prompt, onSuccess, onFail) {
-            if (!HAS_PROXY) { onFail("proxy_not_configured"); return; }
             if (currentPollTimer) {
                 clearTimeout(currentPollTimer);
                 currentPollTimer = null;
@@ -582,8 +510,7 @@
                 onFail("minds_error", e.message);
             });
         }
-
-        // ===== 手動發送訊息 =====
+        // 💬 用戶手動發送訊息
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
             var text = input.value.trim();
@@ -611,8 +538,7 @@
                 }
             );
         }
-
-        // ===== 當前遊戲 =====
+        // 🔥 當前遊戲
         function onHotClick() {
             console.log("🎯 當前遊戲按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
@@ -670,8 +596,7 @@
                 }
             );
         }
-
-        // ===== 即將推出 =====
+        // 🚀 即將推出
         function onUpcomingClick() {
             console.log("🎯 即將推出按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
@@ -731,9 +656,6 @@
                 }
             );
         }
-
-        // 頁面加載後檢查自主生成狀態
-        setTimeout(checkAutoPlan, 800);
         console.log("✅ 腳本加載完成，代理狀態：" + (HAS_PROXY ? "已配置 ✅" : "未配置 ⚠️"));
     </script>
 </body>
