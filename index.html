@@ -472,7 +472,7 @@
                 .then(function() {
                     console.log("✅ 消息已發送，開始輪詢回覆...");
                     var attempts = 0;
-                    var maxAttempts = 60;
+                    var maxAttempts = 90;
                     function pollReply() {
                         if (myRequestId !== currentRequestId) {
                             console.log("🛑 輪詢被新請求取代，停止");
