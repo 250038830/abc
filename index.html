@@ -327,7 +327,7 @@
 <body>
     <div class="container">
         <h1>Viral Game Content Agent</h1>
-        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 可持續對話討論企劃</div>
+        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 自動載入最新遊戲新聞</div>
         <div class="main-layout">
             <div class="control-panel">
                 <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
@@ -347,31 +347,21 @@
                     <div class="btn-hint">搜尋未來 3-6 個月內發售的遊戲</div>
                 </button>
                 <button type="button" class="btn btn-news" onclick="onNewsClick()">
-                    📰 每日遊戲新聞
-                    <div class="btn-hint">整理當前最新 5 則遊戲新聞</div>
+                    📰 重新載入新聞
+                    <div class="btn-hint">手動更新最新 5 則遊戲新聞</div>
                 </button>
             </div>
             <div class="chat-panel">
                 <div class="chat-container">
                     <div class="chat-header">
                         <div class="chat-header-left">
-                            <span>🤖 AI 對話</span>
+                            <span>🤖 AI 對話 & 新聞快訊</span>
                             <span class="chat-badge">MINDS</span>
                         </div>
-                        <button class="new-chat-btn" onclick="newChat()">🗑️ 新對話</button>
+                        <button class="new-chat-btn" onclick="newChat()">🗑️ 清空畫面</button>
                     </div>
                     <div id="chatMessages" class="chat-messages">
-                        <div class="message message-ai">
-                            <div class="message-content">
-                                <div class="welcome-msg">
-                                    你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>
-                                    🎮 點擊左側按鈕一鍵生成遊戲企劃<br>
-                                    📰 點擊「每日遊戲新聞」獲取最新 5 則新聞<br>
-                                    💬 或直接在下方輸入訊息跟我討論<br>
-                                    🔄 我會記住對話上下文，延續討論
-                                </div>
-                            </div>
-                        </div>
+                        <!-- 網頁一打開會自動載入新聞 -->
                     </div>
                     <div class="chat-input-area">
                         <input type="text" id="chatInput" class="chat-input" placeholder="輸入訊息跟 AI 討論企劃..." onkeypress="if(event.key==='Enter')sendChatMessage()">
@@ -430,9 +420,9 @@
         }
 
         function newChat() {
-            if (confirm("確定要開始新對話嗎？\n\n本地聊天記錄會被清空。")) {
-                document.getElementById("chatMessages").innerHTML =
-                    '<div class="message message-ai"><div class="message-content"><div class="welcome-msg">你好！我是你的<strong>遊戲內容創作助手</strong>。<br><br>🎮 點擊左側按鈕一鍵生成遊戲企劃<br>💬 或直接在下方輸入訊息跟我討論</div></div></div>';
+            if (confirm("確定要清空畫面嗎？")) {
+                document.getElementById("chatMessages").innerHTML = "";
+                loadDailyNews();
             }
         }
 
@@ -495,6 +485,38 @@
                 currentPollTimer = null;
                 onFail("minds_error", e.message);
             });
+        }
+
+        // 📰 自動載入最新 5 則遊戲新聞
+        function loadDailyNews() {
+            if (!HAS_PROXY) {
+                addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。");
+                return;
+            }
+            var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
+            prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n\n";
+            prompt += "請用繁體中文回答，格式清晰，每則新聞之間請用分隔線隔開。\n\n【重要規則】只輸出這 5 則遊戲新聞本身，不要輸出任何內部調度日誌。";
+
+            setInputEnabled(false);
+            showTyping();
+            
+            callMinds(prompt,
+                function(text) {
+                    removeTyping();
+                    addMessage("ai", "<h2>🔥 今日精選遊戲新聞 Top 5</h2><hr>" + text);
+                    setInputEnabled(true);
+                },
+                function(errorType, detail) {
+                    removeTyping();
+                    addMessage("ai", "❌ 自動載入新聞失敗：" + (detail || errorType));
+                    setInputEnabled(true);
+                }
+            );
+        }
+
+        function onNewsClick() {
+            document.getElementById("chatMessages").innerHTML = "";
+            loadDailyNews();
         }
 
         // 🔥 當前遊戲 (完整保留)
@@ -617,31 +639,6 @@
             );
         }
 
-        // 📰 每日遊戲新聞 Top 5
-        function onNewsClick() {
-            if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置。"); return; }
-            var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
-            prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n\n";
-            prompt += "請用繁體中文回答，格式清晰，每則新聞之間請用分隔線隔開。\n\n【重要規則】只輸出這 5 則遊戲新聞本身，不要輸出任何內部調度日誌。";
-
-            setInputEnabled(false);
-            addMessage("user", "📰 <strong>[每日遊戲快訊]</strong> 正在整理當前最新 5 則遊戲新聞...");
-            showTyping();
-            
-            callMinds(prompt,
-                function(text) {
-                    removeTyping();
-                    addMessage("ai", "<h2>🔥 今日精選遊戲新聞 Top 5</h2><hr>" + text);
-                    setInputEnabled(true);
-                },
-                function(errorType, detail) {
-                    removeTyping();
-                    addMessage("ai", "❌ 錯誤：" + (detail || errorType));
-                    setInputEnabled(true);
-                }
-            );
-        }
-
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
             var text = input.value.trim();
@@ -662,7 +659,12 @@
                 input.focus();
             });
         }
-        console.log("✅ 腳本加載完成");
+
+        // 🌐 網頁一載入完成，直接自動抓取並顯示 5 則遊戲新聞
+        window.addEventListener("DOMContentLoaded", function() {
+            console.log("🚀 網頁已載入，正在自動取得最新遊戲新聞...");
+            loadDailyNews();
+        });
     </script>
 </body>
 </html>
