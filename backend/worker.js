@@ -7,7 +7,7 @@ addEventListener("scheduled", event => {
 });
 
 async function handleScheduled(event) {
-  console.log("每日 5:00 自動排程觸發成功");
+  console.log("Automatic scheduling triggered successfully at 5:00 AM daily.");
 }
 
 async function handleRequest(request) {
@@ -24,7 +24,7 @@ async function handleRequest(request) {
     return new Response("", { headers: corsHeaders });
   }
 
-  // 1. Steam 熱門數據路由
+  // 1. Steam Popular Data Routes
   if (path === "/steam") {
     try {
       const steamUrl = "https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/";
@@ -41,7 +41,7 @@ async function handleRequest(request) {
     }
   }
 
-  // 🔍 測試與印出所有現有頻道的真實 Alias 結構
+  // 🔍 Test and print the actual Alias ​​structure for all existing channels.
   async function getConversationsList(mindsHeaders) {
     const convResponse = await fetch("https://api.hellominds.ai/v1/messaging/conversations", { method: "GET", headers: mindsHeaders });
     return await convResponse.json();
@@ -54,7 +54,7 @@ async function handleRequest(request) {
 
       const targetLower = (targetName || "").toLowerCase().trim();
 
-      // 檢查所有可能包含名稱的欄位
+      // Check all fields that may contain names.
       for (const conv of convData) {
         const title = (conv.title || conv.name || conv.topic || conv.channelName || conv.alias || "").toLowerCase().trim();
         if (title.includes(targetLower) || targetLower.includes(title)) {
@@ -62,14 +62,14 @@ async function handleRequest(request) {
         }
       }
 
-      // 若完全對不上，回傳 null（不再預設用第一個，防止混在一起）
+      // If they don't match at all, return null (the first one will no longer be used by default to prevent them from being mixed up).
       return null;
     } catch (e) {
       return null;
     }
   }
 
-  // 2. 發送消息給 Minds AI
+  // 2. Send a message to Minds AI
   if (path === "/minds/send") {
     if (request.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -90,14 +90,14 @@ async function handleRequest(request) {
         "referer": "https://app.hellominds.ai/"
       };
 
-      // 取得實際匹配到的 Alias
+      // Get the actual matched Alias
       const realAlias = await resolveRealAlias(requestedAlias, mindsHeaders);
       
       if (!realAlias) {
-        // 如果找不到對應頻道，把後端拉到的所有頻道資訊印出給用戶除錯
+        // If the corresponding channel cannot be found, print out all channel information retrieved from the backend for the user to debug.
         const rawConvs = await getConversationsList(mindsHeaders);
         return new Response(JSON.stringify({ 
-          error: `無法對應頻道名稱: "${requestedAlias}"`, 
+          error: `Unable to match channel name: "${requestedAlias}"`, 
           mindsConversationsList: rawConvs 
         }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -123,7 +123,7 @@ async function handleRequest(request) {
     }
   }
 
-  // 3. 獲取最新 AI 回覆
+  // 3. Get the latest AI replies
   if (path === "/minds/reply") {
     if (request.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -151,7 +151,7 @@ async function handleRequest(request) {
       if (!realAlias) {
         const rawConvs = await getConversationsList(mindsHeaders);
         return new Response(JSON.stringify({ 
-          error: `無法對應頻道名稱: "${requestedAlias}"`, 
+          error: `Unable to match channel name: "${requestedAlias}"`, 
           mindsConversationsList: rawConvs 
         }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
