@@ -377,14 +377,14 @@
     <script>
         console.log("0️⃣ 腳本開始加載...");
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
-        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQ3QGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
+        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         
-        // 🎯 Minds API 回傳的真實頻道 Alias
+        // 關鍵：定義兩個獨立的 Alias 頻道名稱
         var ALIAS_NEWS = "webapp:thread-1787302520429-8stw3z";
         var ALIAS_GAMES = "webapp:thread-1786952803988-6ka4jx";
         
-        // 預設當前頻道
+        // 預設目前頻道
         var activeAlias = ALIAS_NEWS;
 
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
@@ -435,6 +435,7 @@
             }
         }
 
+        // 支持指定 targetAlias 的 Minds 呼叫核心
         function callMindsWithAlias(prompt, targetAlias, onSuccess, onFail) {
             if (!HAS_PROXY) { onFail("proxy_not_configured"); return; }
             if (currentPollTimer) { clearTimeout(currentPollTimer); currentPollTimer = null; }
@@ -442,6 +443,7 @@
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
             
+            // 帶入特定的 alias 查詢先前的最後時間戳
             fetch(PROXY_BASE + "/minds/reply", { 
                 method: "POST", 
                 headers: headers,
@@ -451,6 +453,7 @@
             .then(function(beforeData) {
                 var beforeCreatedAt = beforeData.createdAt || "";
                 
+                // 發送訊息並指定 alias 頻道
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
@@ -505,13 +508,11 @@
             });
         }
 
-        // 📰 每日遊戲新聞頻道
+        // 📰 每日遊戲新聞頻道（對應 alias: Game News）
         function loadDailyNews() {
             activeAlias = ALIAS_NEWS;
             document.getElementById("channelTitle").innerText = "📰 每日遊戲新聞頻道";
-            document.getElementById("channelBadge").innerText = "Game News";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入新聞中的遊戲名稱（如：Mortal Shell II），請 AI 給你標題與講稿...";
+            document.getElementById("channelBadge").innerText = ALIAS_NEWS;
 
             var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
             prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n\n";
@@ -539,14 +540,13 @@
             loadDailyNews();
         }
 
-        // 🔥 當前遊戲企劃
+        // 🔥 當前遊戲企劃（對應 alias: Current games and upcoming releases）
         function onHotClick() {
             activeAlias = ALIAS_GAMES;
             document.getElementById("channelTitle").innerText = "🎮 遊戲企劃頻道";
-            document.getElementById("channelBadge").innerText = "Current & Upcoming";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入你想討論的遊戲名稱，繼續優化企劃...";
+            document.getElementById("channelBadge").innerText = ALIAS_GAMES;
 
+            console.log("🎯 當前遊戲按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
@@ -603,14 +603,13 @@
             );
         }
 
-        // 🚀 即將推出企劃
+        // 🚀 即將推出企劃（對應 alias: Current games and upcoming releases）
         function onUpcomingClick() {
             activeAlias = ALIAS_GAMES;
             document.getElementById("channelTitle").innerText = "🎮 遊戲企劃頻道";
-            document.getElementById("channelBadge").innerText = "Current & Upcoming";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入你想討論的遊戲名稱，繼續優化企劃...";
+            document.getElementById("channelBadge").innerText = ALIAS_GAMES;
 
+            console.log("🎯 即將推出按鈕被點擊");
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
             if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
@@ -624,7 +623,7 @@
                 prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，生成完整的影片企劃。\n\n";
                 prompt += "內容風格：高觀看率爆款\n\n";
                 prompt += "請輸出以下內容：\n";
-                prompt += "1. 即將推出的高討論度遊戲 Top 5\n";
+                prompt += "1. 即將推出的高討論度遊戲 Top 3\n";
                 prompt += "2. 最推薦的遊戲及推薦理由\n";
                 prompt += "3. 3個YouTube爆款標題\n";
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
@@ -640,7 +639,7 @@
                 prompt += "然後，從中挑選1款最適合做影片企劃的遊戲。\n\n";
                 prompt += "內容風格：深度挖掘、推坑向、強調\"可能被錯過的黑馬\"\n\n";
                 prompt += "請輸出以下內容：\n";
-                prompt += "1. 即將推出的冷門單機 Top 5\n";
+                prompt += "1. 即將推出的冷門單機 Top 3\n";
                 prompt += "2. 最推薦的遊戲及推薦理由\n";
                 prompt += "3. 3個YouTube標題（推坑/深度挖掘風格）\n";
                 prompt += "4. 一個30秒的影片開場Hook講稿\n";
@@ -669,34 +668,16 @@
             );
         }
 
-        // 💡 智能對話發送：自動打包使用者的要求，請求 AI 生成標題與 30 秒講稿
+        // 手動對話發送，預設發送到當前選擇的頻道
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
-            var userRawText = input.value.trim();
-            if (!userRawText) return;
-
+            var text = input.value.trim();
+            if (!text) return;
             input.value = "";
             setInputEnabled(false);
-
-            // 在聊天介面上呈現使用者輸入的原文字
-            addMessage("user", userRawText);
+            addMessage("user", text);
             showTyping();
-
-            var finalPrompt = "";
-
-            // 如果是在「每日遊戲新聞頻道」，而且使用者傳送的訊息較短，自動包裝 Prompt
-            if (activeAlias === ALIAS_NEWS) {
-                finalPrompt = "【使用者需求】：我想要做關於「" + userRawText + "」的影片內容。\n\n";
-                finalPrompt += "請根據剛才的新聞上下文或這個遊戲資訊，為我輸出：\n";
-                finalPrompt += "1. 3 個高吸引力的 YouTube/Shorts 爆款標題\n";
-                finalPrompt += "2. 一個 30 秒的影片開場 Hook 講稿（口語化、具吸引力）\n\n";
-                finalPrompt += "請用繁體中文回答，格式清晰，有標題與分隔線。不要輸出無關的系統日誌。";
-            } else {
-                // 在遊戲企劃頻道，直接傳送原文字進行自由討論
-                finalPrompt = userRawText;
-            }
-
-            callMindsWithAlias(finalPrompt, activeAlias, function(reply) {
+            callMindsWithAlias(text, activeAlias, function(reply) {
                 removeTyping();
                 addMessage("ai", reply);
                 setInputEnabled(true);
@@ -709,6 +690,7 @@
             });
         }
 
+        // 🌐 網頁一載入，預設自動載入每日遊戲新聞
         window.addEventListener("DOMContentLoaded", function() {
             console.log("🚀 網頁已載入，正在自動取得每日遊戲新聞...");
             loadDailyNews();
