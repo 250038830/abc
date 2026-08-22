@@ -138,7 +138,7 @@
         }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
-        /* ===== 聊天界面 ===== */
+        /* ===== Chat interface ===== */
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -164,7 +164,7 @@
             align-items: center;
             gap: 8px;
         }
-        /* 頻道下拉選單樣式 */
+        /* Channel dropdown menu style */
         .channel-select {
             background: #111827;
             border: 1px solid #38bdf8;
@@ -286,7 +286,7 @@
             border-top: 1px solid #1e293b;
             background: #0b1329;
         }
-        /* 快速指令工具列 */
+        /* Quick Command Toolbar */
         .input-toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -373,58 +373,58 @@
 <body>
     <div class="container">
         <h1>Viral Game Content Agent</h1>
-        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 雙對話獨立隔離模式</div>
+        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · Dual-dialogue independent isolation mode</div>
         <div class="main-layout">
             <div class="control-panel">
-                <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
-                <label class="label">搜尋模式</label>
+                <div id="proxyStatus" class="proxy-status proxy-no">⚠️ Agent not configured</div>
+                <label class="label">Search mode</label>
                 <select id="styleSelect" class="input-field">
-                    <option value="high">🔥 爆款路線（熱門遊戲）</option>
-                    <option value="low">🧊 冷門好評單機（在線人數少但好評率高）</option>
+                    <option value="high">🔥 Hit Games Strategy (Popular Games)</option>
+                    <option value="low">🧊 Niche but highly rated single-player game (few online players but high positive review rate)</option>
                 </select>
-                <div class="hint">爆款 = 熱門遊戲；冷門 = 在線人數少但好評率高的單機遊戲</div>
+                <div class="hint">Popular games = trending games; Niche games = single-player games with low online player counts but high positive reviews.</div>
                 
-                <div class="divider"><span>對話頻道一：遊戲企劃</span></div>
+                <div class="divider"><span>Chat Channel 1: Game Planning</span></div>
                 <button type="button" class="btn btn-hot" onclick="onHotClick()">
-                    🔥 當前遊戲企劃
-                    <div class="btn-hint">頻道: Current games and upcoming releases</div>
+                    🔥 Current game project
+                    <div class="btn-hint">Channel: Current games and upcoming releases</div>
                 </button>
                 <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
-                    🚀 即將推出企劃
-                    <div class="btn-hint">頻道: Current games and upcoming releases</div>
+                    🚀 Upcoming project
+                    <div class="btn-hint">Channel: Current games and upcoming releases</div>
                 </button>
 
-                <div class="divider"><span>對話頻道二：每日新聞</span></div>
+                <div class="divider"><span>Channel 2: Daily News</span></div>
                 <button type="button" class="btn btn-news" onclick="onNewsClick()">
-                    📰 每日遊戲新聞
-                    <div class="btn-hint">頻道: Game News</div>
+                    📰 Daily Game News
+                    <div class="btn-hint">Channel: Game News</div>
                 </button>
             </div>
             <div class="chat-panel">
                 <div class="chat-container">
                     <div class="chat-header">
                         <div class="chat-header-left">
-                            <span>當前頻道：</span>
+                            <span>Current Channel：</span>
                             <select id="channelSelect" class="channel-select" onchange="onChannelDropdownChange()">
                                 <option value="news">📰 Game News</option>
                                 <option value="games">🎮 Current games and upcoming releases</option>
                             </select>
                             <span class="chat-badge" id="channelBadge">MINDS</span>
                         </div>
-                        <button class="new-chat-btn" onclick="newChat()">🗑️ 清空畫面</button>
+                        <button class="new-chat-btn" onclick="newChat()">🗑️ Clear screen</button>
                     </div>
                     <div id="chatMessages" class="chat-messages">
-                        <!-- 訊息會顯示在此處 -->
+                        <!-- The message will be displayed here -->
                     </div>
                     <div class="chat-input-area">
                         <div class="input-toolbar">
-                            <button class="btn-custom-generate" onclick="sendSpecificGamePlan()">🎯 指定遊戲生成企劃</button>
-                            <button class="btn-news-generate" onclick="sendSpecificNewsPlan()">📰 指定新聞生成企劃</button>
-                            <span style="font-size: 11px; color: #64748b;">(在下方輸入名稱/新聞後點擊相應按鈕生成)</span>
+                            <button class="btn-custom-generate" onclick="sendSpecificGamePlan()">🎯 Designated game generation project</button>
+                            <button class="btn-news-generate" onclick="sendSpecificNewsPlan()">📰 Designated News Generation Project</button>
+                            <span style="font-size: 11px; color: #64748b;">(Enter the name/news article below and click the corresponding button to generate)</span>
                         </div>
                         <div class="input-row">
-                            <input type="text" id="chatInput" class="chat-input" placeholder="想製作哪款遊戲或新聞的企劃？（例如：Mortal Shell II）..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-                            <button class="send-btn" id="sendBtn" onclick="sendChatMessage()">發送</button>
+                            <input type="text" id="chatInput" class="chat-input" placeholder="Which game or news project do you want to create?？（For example：Mortal Shell II）..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                            <button class="send-btn" id="sendBtn" onclick="sendChatMessage()">Send</button>
                         </div>
                     </div>
                 </div>
@@ -432,22 +432,22 @@
         </div>
     </div>
     <script>
-        console.log("0️⃣ 腳本開始加載...");
+        console.log("0️⃣ Script begins loading...");
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
         var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         
-        // 關鍵：定義兩個獨立的 Alias 頻道名稱
+        // Key: Define two independent Alias ​​channel names
         var ALIAS_NEWS = "webapp:thread-1787302520429-8stw3z";
         var ALIAS_GAMES = "webapp:thread-1786952803988-6ka4jx";
         
-        // 預設目前頻道
+        // Preset current channel
         var activeAlias = ALIAS_NEWS;
 
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
         if (HAS_PROXY) {
             document.getElementById("proxyStatus").className = "proxy-status proxy-ok";
-            document.getElementById("proxyStatus").textContent = "✅ 代理已配置：" + PROXY_BASE;
+            document.getElementById("proxyStatus").textContent = "✅ The agent has been configured：" + PROXY_BASE;
         }
 
         var currentPollTimer = null;
@@ -487,12 +487,12 @@
         }
 
         function newChat() {
-            if (confirm("確定要清空當前畫面嗎？")) {
+            if (confirm("Are you sure you want to clear the current screen？")) {
                 document.getElementById("chatMessages").innerHTML = "";
             }
         }
 
-        // 同步頻道下拉選單
+        // Synchronous Channel Drop-down Menu
         function syncChannelDropdown(alias) {
             var select = document.getElementById("channelSelect");
             if (alias === ALIAS_NEWS) {
@@ -502,19 +502,19 @@
             }
         }
 
-        // 手動切換頻道下拉選單事件
+        // Manual channel switching dropdown menu event
         function onChannelDropdownChange() {
             var val = document.getElementById("channelSelect").value;
-            document.getElementById("chatMessages").innerHTML = ""; // 切換頻道時清空畫面
+            document.getElementById("chatMessages").innerHTML = ""; // Clear screen when switching channels
             if (val === "news") {
                 loadDailyNews();
             } else {
                 activeAlias = ALIAS_GAMES;
-                addMessage("ai", "已切換至 🎮 <strong>遊戲企劃頻道</strong>。你可以直接發送訊息討論，或輸入遊戲名稱後點擊上方「指定遊戲生成企劃」。");
+                addMessage("ai", "Switched to 🎮 <strong>Game Planning Channel</strong>。You can send a message to discuss directly, or enter the game name and click "Specify Game Generation Project" above.");
             }
         }
 
-        // 支持指定 targetAlias 的 Minds 呼叫核心
+        // Minds call core supports specifying targetAlias
         function callMindsWithAlias(prompt, targetAlias, onSuccess, onFail) {
             if (!HAS_PROXY) { onFail("proxy_not_configured"); return; }
             if (currentPollTimer) { clearTimeout(currentPollTimer); currentPollTimer = null; }
@@ -522,7 +522,7 @@
             var messageText = "[source: webapp | tz: Asia/Hong_Kong]\n" + prompt;
             var headers = { "Content-Type": "application/json", "X-Auth-Token": MINDS_KEY };
             
-            // 帶入特定的 alias 查詢先前的最後時間戳
+            // Use a specific alias to query the previous last timestamp.
             fetch(PROXY_BASE + "/minds/reply", { 
                 method: "POST", 
                 headers: headers,
@@ -532,7 +532,7 @@
             .then(function(beforeData) {
                 var beforeCreatedAt = beforeData.createdAt || "";
                 
-                // 發送訊息並指定 alias 頻道
+                // Send a message and specify an alias channel
                 return fetch(PROXY_BASE + "/minds/send", {
                     method: "POST",
                     headers: headers,
@@ -587,14 +587,14 @@
             });
         }
 
-        // 📰 每日遊戲新聞頻道
+        // 📰 Daily Game News Channel
         function loadDailyNews() {
             activeAlias = ALIAS_NEWS;
             syncChannelDropdown(ALIAS_NEWS);
 
-            var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
-            prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n5. 原始新聞網址（請務必搜尋該新聞，並附上真實的來源連結）\n\n";
-            prompt += "請用英文回答，格式清晰，每則新聞之間請用分隔線隔開。\n\n【重要規則】只輸出這 5 則遊戲新聞本身，不要輸出任何內部調度日誌。";
+            var prompt = "You are a professional game news editor. Please search and compile 5 of the latest and most talked-about game news items.\n\n";
+            prompt += "Please output 5 news items in sequence, each containing:\n1. News Headline\n2. Related games / Manufacturers\n3. Key Summary（2-3 sentences）\n4. Gamer discussion focus\n5. Original news URL (Please be sure to search for this news article and include the original source link)\n\n";
+            prompt += "Please answer in English, using a clear format, and separate each news item with a separator line.\n\n【Important Rule】Only output these 5 game news items themselves; do not output any internal scheduling logs.";
 
             setInputEnabled(false);
             showTyping();
@@ -602,12 +602,12 @@
             callMindsWithAlias(prompt, ALIAS_NEWS,
                 function(text) {
                     removeTyping();
-                    addMessage("ai", "<h2>🔥 今日精選遊戲新聞 Top 5</h2><hr>" + text);
+                    addMessage("ai", "<h2>🔥 Top 5 Featured Game News of the Day</h2><hr>" + text);
                     setInputEnabled(true);
                 },
                 function(errorType, detail) {
                     removeTyping();
-                    addMessage("ai", "❌ 載入新聞失敗：" + (detail || errorType));
+                    addMessage("ai", "❌ News loading failed：" + (detail || errorType));
                     setInputEnabled(true);
                 }
             );
@@ -618,45 +618,45 @@
             loadDailyNews();
         }
 
-        // 🔥 當前遊戲企劃
+        // 🔥 Current game project
         function onHotClick() {
             activeAlias = ALIAS_GAMES;
             syncChannelDropdown(ALIAS_GAMES);
 
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
-            if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
+            if (!HAS_PROXY) { addMessage("ai", "❌ The proxy is not configured. Please set PROXY_BASE first."); return; }
             var prompt = "";
             var userMsg = "";
             if (isHot) {
-                userMsg = "🎮 <strong>[爆款路線]</strong> 搜尋當前 Steam 熱門遊戲並生成影片企劃";
-                prompt = "你是一個遊戲內容創作助手。請搜尋並列出目前 Steam 平台上在線人數最高的熱門遊戲（前5名），";
-                prompt += "包括遊戲名稱、大約在線人數、遊戲類型。\n\n";
-                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，生成完整的影片企劃。\n\n";
-                prompt += "內容風格：高觀看率爆款\n\n";
-                prompt += "請輸出以下內容：\n";
-                prompt += "1. Steam 熱門榜 Top 5（遊戲名 + 在線人數 + 類型）\n";
-                prompt += "2. 推薦遊戲及推薦理由\n";
-                prompt += "3. 3個YouTube爆款標題\n";
-                prompt += "4. 一個30秒的影片開場Hook講稿\n";
-                prompt += "5. 影片大綱（3-5個重點段落）\n\n";
-                prompt += "請用英文回答，格式要清晰，有標題和分隔線。";
-                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
+                userMsg = "🎮 <strong>[Bestseller route]</strong> Search for currently popular games on Steam and generate video projects";
+                prompt = "You are a game content creation assistant. Please search for and list the top 5 most popular games with the highest number of concurrent players on Steam.";
+                prompt += "This includes the game name, approximate number of online players, and game type.\n\n";
+                prompt += "Then, select one game that is most suitable for creating a high-viewership blockbuster video and generate a complete video project.\n\n";
+                prompt += "Content Style: High-Viewing Viral Content\n\n";
+                prompt += "Please output the following content.：\n";
+                prompt += "1. Steam Top 5 Popular Games (Game Name + Number of Players + Genre)\n";
+                prompt += "2. Recommended games and reasons for recommendation\n";
+                prompt += "3. 3 viral YouTube titles\n";
+                prompt += "4. A 30-second video opening hook script\n";
+                prompt += "5. Film outline (3-5 key segments)\n\n";
+                prompt += "Please answer in English, and ensure the format is clear, including headings and separators.";
+                prompt += "\n\n【Important Rule】Do not output any content unrelated to the game plan, such as system framework, iteration batches, action weight specifications, internal scheduling logs, etc. Only output the plan itself.";
             } else {
-                userMsg = "💎 <strong>[冷門好評單機]</strong> 搜尋當前在線人數少但好評率高的單機遊戲並生成企劃";
-                prompt = "你是一個遊戲內容創作助手。請搜尋目前 Steam 平台上在線人數較少（小眾）但好評率極高（壓倒性好評/特別好評）的單機遊戲（前5名），";
-                prompt += "包括遊戲名稱、大約在線人數、Steam 好評率、遊戲類型、發售年份。\n\n";
-                prompt += "重點：必須是在線人數不多、屬於小眾冷門，但玩家評價極高的單機遊戲，不要推薦大作或熱門遊戲。\n\n";
-                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲。\n\n";
-                prompt += "內容風格：深度挖掘、推坑向、強調\"被低估的寶藏\"\n\n";
-                prompt += "請輸出以下內容：\n";
-                prompt += "1. 冷門好評單機 Top 5（遊戲名 + 在線人數 + 好評率 + 類型 + 年份）\n";
-                prompt += "2. 最推薦的遊戲及推薦理由\n";
-                prompt += "3. 3個YouTube標題（推坑/深度挖掘風格）\n";
-                prompt += "4. 一個30秒的影片開場Hook講稿\n";
-                prompt += "5. 影片大綱（3-5個重點段落）\n\n";
-                prompt += "請用英文文回答，格式要清晰，有標題和分隔線。";
-                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
+                userMsg = "💎 <strong>[Niche but highly rated single-player game]</strong> Search for single-player games with low online player counts but high positive reviews and generate a project.";
+                prompt = "You are a game content creation assistant. Please search for the top 5 single-player games on Steam that currently have a small number of online players (niche) but extremely high positive reviews (overwhelmingly positive/very positive).";
+                prompt += "This includes the game's name, approximate number of online players, Steam positive review rate, game genre, and year of release.\n\n";
+                prompt += "Key point: It must be a niche, low-popularity single-player game with a small number of online players, but with extremely high player ratings. Do not recommend AAA or popular games.\n\n";
+                prompt += "Then, choose one game that is most suitable for film planning.\n\n";
+                prompt += "Content style: In-depth exploration, plot twists, emphasizing "underrated gems""\n\n";
+                prompt += "Please output the following content.：\n";
+                prompt += "1. Top 5 Underrated Single-Player Games (Game Name + Online Players + Positive Review Rate + Genre + Year)\n";
+                prompt += "2. Most recommended games and reasons for recommendation\n";
+                prompt += "3. 3 YouTube titles (pushing the question/deep dive style)\n";
+                prompt += "4. A 30-second video opening hook script\n";
+                prompt += "5. Film outline (3-5 key segments)\n\n";
+                prompt += "Please answer in English, with clear formatting, including headings and separators.";
+                prompt += "\n\n【Important Rule】Do not output any content unrelated to the game plan, such as system framework, iteration batches, action weight specifications, internal scheduling logs, etc. Only output the plan itself.";
             }
             setInputEnabled(false);
             addMessage("user", userMsg);
@@ -669,9 +669,9 @@
                 },
                 function(errorType, detail) {
                     removeTyping();
-                    var msg = "❌ 錯誤：";
-                    if (errorType === "timeout") msg += "AI 回覆超時，請稍後重試。";
-                    else if (errorType === "proxy_not_configured") msg += "代理未配置。";
+                    var msg = "❌ mistake：";
+                    if (errorType === "timeout") msg += "AI response timed out, please try again later.";
+                    else if (errorType === "proxy_not_configured") msg += "The agent is not configured.";
                     else msg += (detail || errorType);
                     addMessage("ai", msg);
                     setInputEnabled(true);
@@ -679,47 +679,47 @@
             );
         }
 
-        // 🚀 即將推出企劃
+        // 🚀 Upcoming project
         function onUpcomingClick() {
             activeAlias = ALIAS_GAMES;
             syncChannelDropdown(ALIAS_GAMES);
 
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
-            if (!HAS_PROXY) { addMessage("ai", "❌ 代理未配置，請先設置 PROXY_BASE。"); return; }
+            if (!HAS_PROXY) { addMessage("ai", "❌ The proxy is not configured. Please set PROXY_BASE first."); return; }
             var prompt = "";
             var userMsg = "";
             if (isHot) {
-                userMsg = "🚀 <strong>[爆款路線]</strong> 搜尋即將推出的高討論度遊戲並生成影片企劃";
-                prompt = "你是一個遊戲內容創作助手。請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的遊戲，";
-                prompt += "找出目前討論度最高、最有爆款潛力的3款遊戲。\n\n";
-                prompt += "對於每款遊戲，請提供：遊戲名稱、預計發售日期、遊戲類型、為什麼討論度高。\n\n";
-                prompt += "然後，從中挑選1款最適合做高觀看率爆款影片的遊戲，生成完整的影片企劃。\n\n";
-                prompt += "內容風格：高觀看率爆款\n\n";
-                prompt += "請輸出以下內容：\n";
-                prompt += "1. 即將推出的高討論度遊戲 Top 3\n";
-                prompt += "2. 最推薦的遊戲及推薦理由\n";
-                prompt += "3. 3個YouTube爆款標題\n";
-                prompt += "4. 一個30秒的影片開場Hook講稿\n";
-                prompt += "5. 影片大綱（3-5個重點段落）\n\n";
-                prompt += "請用英文回答，格式要清晰，有標題和分隔線。";
-                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
+                userMsg = "🚀 <strong>[Bestseller route]</strong> Search for upcoming highly discussed games and generate video projects.";
+                prompt = "You are a game content creation assistant. Please search for games that are about to be released on Steam (within the next 3-6 months).";
+                prompt += "Identify the three games that are currently generating the most discussion and have the greatest potential to become hits.\n\n";
+                prompt += "For each game, please provide: game name, expected release date, game genre, and why it is generating a lot of discussion.\n\n";
+                prompt += "Then, select one game that is most suitable for creating a high-viewership blockbuster video and generate a complete video project.\n\n";
+                prompt += "Content Style: High-Viewing Viral Content\n\n";
+                prompt += "Please output the following content.：\n";
+                prompt += "1. Top 3 Upcoming Highly Discussed Games\n";
+                prompt += "2. Most recommended games and reasons for recommendation\n";
+                prompt += "3. 3 viral YouTube titles\n";
+                prompt += "4. A 30-second video opening hook script\n";
+                prompt += "5. Film outline (3-5 key segments)\n\n";
+                prompt += "Please answer in English, and ensure the format is clear, including headings and separators.";
+                prompt += "\n\n【Important Rule】Do not output any content unrelated to the game plan, such as system framework, iteration batches, action weight specifications, internal scheduling logs, etc. Only output the plan itself.";
             } else {
-                userMsg = "💎 <strong>[冷門好評單機]</strong> 搜尋即將推出的小眾高潛力單機遊戲並生成企劃";
-                prompt = "你是一個遊戲內容創作助手。請搜尋 Steam 平台上即將推出（未來3-6個月內發售）的小眾單機遊戲，";
-                prompt += "找出目前討論度不高但品質看起來極高、有潛力成為黑馬的3款單機遊戲。\n\n";
-                prompt += "重點：必須是小眾、非大作、由獨立開發者或小團隊製作的單機遊戲，不要推薦 3A 大作。\n\n";
-                prompt += "對於每款遊戲，請提供：遊戲名稱、預計發售日期、遊戲類型、開發團隊背景、為什麼值得期待。\n\n";
-                prompt += "然後，從中挑選1款最適合做影片企劃的遊戲。\n\n";
-                prompt += "內容風格：深度挖掘、推坑向、強調\"可能被錯過的黑馬\"\n\n";
-                prompt += "請輸出以下內容：\n";
-                prompt += "1. 即將推出的冷門單機 Top 3\n";
-                prompt += "2. 最推薦的遊戲及推薦理由\n";
-                prompt += "3. 3個YouTube標題（推坑/深度挖掘風格）\n";
-                prompt += "4. 一個30秒的影片開場Hook講稿\n";
-                prompt += "5. 影片大綱（3-5個重點段落）\n\n";
-                prompt += "請用英文回答，格式要清晰，有標題和分隔線。";
-                prompt += "\n\n【重要規則】不要輸出任何系統框架、迭代批次、動作權重規格、內部調度日誌等與遊戲企劃無關的內容，只輸出企劃本身。";
+                userMsg = "💎 <strong>[Niche but highly rated single-player game]</strong> Search for upcoming niche, high-potential single-player games and generate projects.";
+                prompt = "You are a game content creation assistant. Please search for niche single-player games that are about to be released on Steam (within the next 3-6 months).";
+                prompt += "Identify three single-player games that are not currently generating much buzz but appear to be of extremely high quality and have the potential to become dark horses.\n\n";
+                prompt += "Key point: It must be a niche, non-AAA game, a single-player game made by an independent developer or a small team. Do not recommend AAA games.\n\n";
+                prompt += "For each game, please provide: game name, expected release date, game genre, development team background, and why it is worth looking forward to.\n\n";
+                prompt += "Then, choose one game that is most suitable for film planning.\n\n";
+                prompt += "Content style: In-depth analysis, plot twists, emphasizing "potentially missed dark horses""\n\n";
+                prompt += "Please output the following content.：\n";
+                prompt += "1. Top 3 Upcoming Niche Single-Player Games\n";
+                prompt += "2. Most recommended games and reasons for recommendation\n";
+                prompt += "3. 3 YouTube titles (pushing the question/deep dive style)\n";
+                prompt += "4. A 30-second video opening hook script\n";
+                prompt += "5. Film outline (3-5 key segments)\n\n";
+                prompt += "Please answer in English, and ensure the format is clear, including headings and separators.";
+                prompt += "\n\n【Important Rule】Do not output any content unrelated to the game plan, such as system framework, iteration batches, action weight specifications, internal scheduling logs, etc. Only output the plan itself.";
             }
             setInputEnabled(false);
             addMessage("user", userMsg);
@@ -732,9 +732,9 @@
                 },
                 function(errorType, detail) {
                     removeTyping();
-                    var msg = "❌ 錯誤：";
-                    if (errorType === "timeout") msg += "AI 回覆超時，請稍後重試。";
-                    else if (errorType === "proxy_not_configured") msg += "代理未配置。";
+                    var msg = "❌ mistake：";
+                    if (errorType === "timeout") msg += "AI response timed out, please try again later.";
+                    else if (errorType === "proxy_not_configured") msg += "The agent is not configured.";
                     else msg += (detail || errorType);
                     addMessage("ai", msg);
                     setInputEnabled(true);
@@ -742,29 +742,29 @@
             );
         }
 
-        // 🎯 指定遊戲生成企劃功能
+        // 🎯 Designated game generation planning function
         function sendSpecificGamePlan() {
             var input = document.getElementById("chatInput");
             var gameName = input.value.trim();
             if (!gameName) {
-                alert("請先在下方輸入框寫下你想做的遊戲名稱（例如：Mortal Shell II）！");
+                alert("Please enter the name of the game you want to make in the input box below (e.g., Mortal Shell II)!");
                 input.focus();
                 return;
             }
 
-            // 強制切換至遊戲企劃頻道
+            // Forced switch to the game planning channel
             activeAlias = ALIAS_GAMES;
             syncChannelDropdown(ALIAS_GAMES);
 
-            var userMsg = "🎯 針對遊戲 <strong>《" + gameName + "》</strong> 生成影片企劃";
+            var userMsg = "🎯 For the game <strong>《" + gameName + "》</strong> Generate a film project";
             
-            var prompt = "你是一個遊戲內容創作助手。使用者想要製作關於遊戲《" + gameName + "》的影片內容。\n\n";
-            prompt += "請為這款遊戲生成一份完整的影片企劃，包含以下內容：\n";
-            prompt += "1. 3個YouTube爆款標題\n";
-            prompt += "2. 一個30秒的影片開場Hook講稿\n";
-            prompt += "3. 影片大綱（3-5個重點段落）\n\n";
-            prompt += "請用英文回答，格式要清晰，有標題和分隔線。\n";
-            prompt += "【重要規則】不要輸出任何系統框架、內部調度日誌等無關內容，只輸出企劃本身。";
+            var prompt = "You are a game content creation assistant. Users want to create content about games《" + gameName + "》the content of the video。\n\n";
+            prompt += "Please create a complete video project for this game, including the following:\n";
+            prompt += "1. 3 viral YouTube titles\n";
+            prompt += "2. A 30-second video opening hook script\n";
+            prompt += "3. Film outline (3-5 key segments)\n\n";
+            prompt += "Please answer in English, and ensure the format is clear, including headings and separators.\n";
+            prompt += "【Important Rule】Do not output any irrelevant content such as system framework or internal scheduling logs; only output the plan itself.";
 
             input.value = "";
             setInputEnabled(false);
@@ -778,36 +778,36 @@
                 input.focus();
             }, function(errorType, detail) {
                 removeTyping();
-                addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                addMessage("ai", "❌ mistake：" + (detail || errorType));
                 setInputEnabled(true);
                 input.focus();
             });
         }
 
-        // 📰 指定新聞生成企劃功能
+        // 📰 Designated news generation planning function
         function sendSpecificNewsPlan() {
             var input = document.getElementById("chatInput");
             var newsTopic = input.value.trim();
             if (!newsTopic) {
-                alert("請先在下方輸入框貼上新聞標題或相關內容！");
+                alert("Please paste the news title or related content into the input box below first！");
                 input.focus();
                 return;
             }
 
-            // 強制切換至每日新聞頻道
+            // Forced switch to the Daily News channel
             activeAlias = ALIAS_NEWS;
             syncChannelDropdown(ALIAS_NEWS);
 
-            var userMsg = "📰 針對新聞內容 <strong>「" + newsTopic + "」</strong> 生成影片企劃";
+            var userMsg = "📰 Regarding the news content <strong>「" + newsTopic + "」</strong> Generate a film project";
             
-            var prompt = "你是一個遊戲內容創作助手。使用者想要製作關於以下遊戲新聞的影片內容：\n\n「" + newsTopic + "」\n\n";
-            prompt += "請為這則新聞生成一份完整的影片企劃，包含以下內容：\n";
-            prompt += "1. 3個YouTube爆款標題\n";
-            prompt += "2. 一個30秒的影片開場Hook講稿\n";
-            prompt += "3. 影片大綱（3-5個重點段落）\n\n"
-            prompt += "4. 原始新聞網址（請務必搜尋該新聞，並附上真實的來源連結）\n";
-            prompt += "請用英文回答，格式要清晰，有標題和分隔線。\n";
-            prompt += "【重要規則】不要輸出任何系統框架、內部調度日誌等無關內容，只輸出企劃本身。";
+            var prompt = "You are a game content creation assistant. The user wants to create video content about the following game news:\n\n「" + newsTopic + "」\n\n";
+            prompt += "Please generate a complete video proposal for this news story, including the following:\n";
+            prompt += "1. 3 viral YouTube titles\n";
+            prompt += "2. A 30-second video opening hook script\n";
+            prompt += "3. Film outline (3-5 key segments)\n\n"
+            prompt += "4. Original news URL (Please be sure to search for this news article and include the original source link)\n";
+            prompt += "Please answer in English, and ensure the format is clear, including headings and separators.\n";
+            prompt += "【Important Rule】Do not output any irrelevant content such as system framework or internal scheduling logs; only output the plan itself.";
 
             input.value = "";
             setInputEnabled(false);
@@ -821,13 +821,13 @@
                 input.focus();
             }, function(errorType, detail) {
                 removeTyping();
-                addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                addMessage("ai", "❌ mistake：" + (detail || errorType));
                 setInputEnabled(true);
                 input.focus();
             });
         }
 
-        // 手動對話發送，預設發送到當前選擇的頻道
+        // Manual message sending, preset to the currently selected channel.
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
             var text = input.value.trim();
@@ -843,15 +843,15 @@
                 input.focus();
             }, function(errorType, detail) {
                 removeTyping();
-                addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                addMessage("ai", "❌ mistake：" + (detail || errorType));
                 setInputEnabled(true);
                 input.focus();
             });
         }
 
-        // 🌐 網頁一載入，預設自動載入每日遊戲新聞
+        // 🌐 The webpage automatically loads daily game news upon loading.
         window.addEventListener("DOMContentLoaded", function() {
-            console.log("🚀 網頁已載入，正在自動取得每日遊戲新聞...");
+            console.log("🚀 The webpage has loaded and is automatically retrieving daily game news...");
             loadDailyNews();
         });
     </script>
