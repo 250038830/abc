@@ -102,6 +102,9 @@
         .btn-upcoming:hover { box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4); }
         .btn-news { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
         .btn-news:hover { box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4); }
+        .btn-custom { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-custom:hover { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
+
         .hint {
             font-size: 12px;
             color: #6b7280;
@@ -138,6 +141,7 @@
         }
         .proxy-ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .proxy-no { background: rgba(239, 68, 68, 0.1); color: #f43f5e; border: 1px solid rgba(239, 68, 68, 0.3); }
+        
         /* ===== 聊天界面 ===== */
         .chat-container {
             display: flex;
@@ -265,12 +269,59 @@
         }
         .message-ai .message-content li { margin-bottom: 4px; }
         .message-ai .message-content p { margin: 8px 0; }
-        .chat-input-area {
+        
+        /* 聊天底層發送控制區 */
+        .chat-input-wrapper {
             display: flex;
+            flex-direction: column;
             gap: 8px;
             padding: 12px;
             border-top: 1px solid #1e293b;
             background: #0b1329;
+        }
+        .channel-selector-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .channel-select {
+            background: #111827;
+            border: 1px solid #3b82f6;
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .preset-chip-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .preset-chip {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .preset-chip:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #60a5fa;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
         }
         .chat-input {
             flex: 1;
@@ -316,18 +367,12 @@
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
             30% { transform: translateY(-6px); opacity: 1; }
         }
-        .welcome-msg {
-            color: #94a3b8;
-            font-size: 13px;
-            line-height: 1.7;
-        }
-        .welcome-msg strong { color: #38bdf8; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Viral Game Content Agent</h1>
-        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 雙對話獨立隔離模式</div>
+        <div class="desc">Track 1: Audience Growth · Powered by Minds AI · 雙頻道互動討論與客製化企劃生成器</div>
         <div class="main-layout">
             <div class="control-panel">
                 <div id="proxyStatus" class="proxy-status proxy-no">⚠️ 代理未配置</div>
@@ -341,17 +386,23 @@
                 <div class="divider"><span>對話頻道一：遊戲企劃</span></div>
                 <button type="button" class="btn btn-hot" onclick="onHotClick()">
                     🔥 當前遊戲企劃
-                    <div class="btn-hint">頻道: Current games and upcoming releases</div>
+                    <div class="btn-hint">搜尋當前發售遊戲</div>
                 </button>
                 <button type="button" class="btn btn-upcoming" onclick="onUpcomingClick()">
                     🚀 即將推出企劃
-                    <div class="btn-hint">頻道: Current games and upcoming releases</div>
+                    <div class="btn-hint">搜尋未來 3-6 個月發售遊戲</div>
                 </button>
 
                 <div class="divider"><span>對話頻道二：每日新聞</span></div>
                 <button type="button" class="btn btn-news" onclick="onNewsClick()">
                     📰 每日遊戲新聞
-                    <div class="btn-hint">頻道: Game News</div>
+                    <div class="btn-hint">抓取最新 5 則焦點新聞</div>
+                </button>
+
+                <div class="divider"><span>快速自訂企劃</span></div>
+                <button type="button" class="btn btn-custom" onclick="promptCustomGame()">
+                    🎯 輸入特定遊戲名生成企劃
+                    <div class="btn-hint">例如：Mortal Shell II</div>
                 </button>
             </div>
             <div class="chat-panel">
@@ -359,16 +410,32 @@
                     <div class="chat-header">
                         <div class="chat-header-left">
                             <span id="channelTitle">🤖 AI 對話區</span>
-                            <span class="chat-badge" id="channelBadge">MINDS</span>
+                            <span class="chat-badge" id="channelBadge">Game News</span>
                         </div>
                         <button class="new-chat-btn" onclick="newChat()">🗑️ 清空畫面</button>
                     </div>
                     <div id="chatMessages" class="chat-messages">
-                        <!-- 訊息會顯示在此處 -->
+                        <!-- 訊息顯示區 -->
                     </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chatInput" class="chat-input" placeholder="輸入訊息跟 AI 討論企劃..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-                        <button class="send-btn" id="sendBtn" onclick="sendChatMessage()">發送</button>
+                    <div class="chat-input-wrapper">
+                        <!-- 頻道快速切換器 -->
+                        <div class="channel-selector-bar">
+                            <span>📡 目前發送頻道：</span>
+                            <select id="channelSelect" class="channel-select" onchange="switchChannel(this.value)">
+                                <option value="news">📰 Game News (每日新聞頻道)</option>
+                                <option value="games">🎮 Current games and upcoming releases (企劃頻道)</option>
+                            </select>
+                        </div>
+                        <!-- 預設常用對話短語 (Chips) -->
+                        <div class="preset-chip-bar">
+                            <div class="preset-chip" onclick="applyPreset('我要做 Mortal Shell II 的影片，請給我 3 個爆款標題和 30 秒 Hook 講稿')">🎬 生成 Mortal Shell II 講稿</div>
+                            <div class="preset-chip" onclick="applyPreset('請根據上面的新聞，挑選 1 則最值得做影片的新聞，幫我寫 3 個標題與 30 秒講稿')">📰 根據新聞生成講稿</div>
+                            <div class="preset-chip" onclick="applyPreset('請把這個企劃的大綱擴寫得更詳細一點')">📝 擴寫企劃細節</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatInput" class="chat-input" placeholder="輸入訊息，或輸入「我要做 XX 遊戲企劃」..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                            <button class="send-btn" id="sendBtn" onclick="sendChatMessage()">發送</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -377,14 +444,13 @@
     <script>
         console.log("0️⃣ 腳本開始加載...");
         var PROXY_BASE = "https://winter-disk-958a.chunyin743.workers.dev";
-        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQ3QGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
+        var MINDS_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImFybjphd3M6a21zOmFwLW5vcnRoZWFzdC0xOjYyODg4NDA0NTY0NTprZXkvODgwODA0ZjQtNTc4ZC00ZGY3LThkYWQtMmQ5ODg2Y2M5MmZmIn0.eyJlbWFpbCI6ImNodW55aW43NDNAZ21haWwuY29tIiwiaHVtYW5JZCI6IjRlZGI0MzNlLWYzNmItMTQxMC04NDY2LTAwMDM5Y2U3ZGYxMSIsInJvbGUiOiJ1c2VyIiwidmVyc2lvbiI6MywiaXNzIjoidXNlbWluZHMtYmFja2VuZC1hdXRoZW50aWNhdGlvbiIsImlhdCI6MTc4Njk1MjY5MCwiZXhwIjoxNzk0NzI4Njg5LCJzdWIiOiJjaHVueWluNzQzQGdtYWlsLmNvbSJ9.wkdjz9fHp7nZLn0dI3nz-8xtKrF6fWVVwKgv3uwjK6FAgeHy7Oxg8aMDbtl9t_m26iGYz1IKs9ipOELApCTg2g";
         var MIND_ID = "64db433e-f36b-1410-8466-00039ce7df11";
         
-        // 🎯 Minds API 回傳的真實頻道 Alias
+        // 兩個頻道的真實 Alias 識別碼
         var ALIAS_NEWS = "webapp:thread-1787302520429-8stw3z";
         var ALIAS_GAMES = "webapp:thread-1786952803988-6ka4jx";
         
-        // 預設當前頻道
         var activeAlias = ALIAS_NEWS;
 
         var HAS_PROXY = PROXY_BASE && PROXY_BASE !== "YOUR_WORKER_URL" && PROXY_BASE.length > 10;
@@ -433,6 +499,45 @@
             if (confirm("確定要清空當前畫面嗎？")) {
                 document.getElementById("chatMessages").innerHTML = "";
             }
+        }
+
+        // 頻道選單切換
+        function switchChannel(type) {
+            if (type === "news") {
+                activeAlias = ALIAS_NEWS;
+                document.getElementById("channelTitle").innerText = "📰 每日遊戲新聞頻道";
+                document.getElementById("channelBadge").innerText = "Game News";
+                document.getElementById("channelSelect").value = "news";
+            } else {
+                activeAlias = ALIAS_GAMES;
+                document.getElementById("channelTitle").innerText = "🎮 遊戲企劃頻道";
+                document.getElementById("channelBadge").innerText = "Current & Upcoming";
+                document.getElementById("channelSelect").value = "games";
+            }
+        }
+
+        // 點擊預設對話按鈕
+        function applyPreset(text) {
+            document.getElementById("chatInput").value = text;
+            sendChatMessage();
+        }
+
+        // 輸入指定遊戲名稱快速生成企劃
+        function promptCustomGame() {
+            var gameName = prompt("請輸入你想製作影片的遊戲名稱：", "Mortal Shell II");
+            if (!gameName) return;
+            
+            // 自動切換至企劃頻道
+            switchChannel("games");
+            
+            var promptText = "我要做《" + gameName + "》的影片企劃。請為我生成：\n" +
+                             "1. 3 個高點閱率的 YouTube 爆款標題\n" +
+                             "2. 一個 30 秒的影片開場 Hook 講稿\n" +
+                             "3. 影片的核心看點與大綱（3 個重點）\n\n" +
+                             "請用繁體中文回答，格式清晰。";
+            
+            document.getElementById("chatInput").value = promptText;
+            sendChatMessage();
         }
 
         function callMindsWithAlias(prompt, targetAlias, onSuccess, onFail) {
@@ -507,11 +612,7 @@
 
         // 📰 每日遊戲新聞頻道
         function loadDailyNews() {
-            activeAlias = ALIAS_NEWS;
-            document.getElementById("channelTitle").innerText = "📰 每日遊戲新聞頻道";
-            document.getElementById("channelBadge").innerText = "Game News";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入新聞中的遊戲名稱（如：Mortal Shell II），請 AI 給你標題與講稿...";
+            switchChannel("news");
 
             var prompt = "你是一個專業的遊戲新聞編輯。請搜尋並整理目前遊戲圈最新、最具話題性的遊戲新聞共 5 則。\n\n";
             prompt += "請依序輸出 5 則新聞，每則新聞包含：\n1. 新聞標題\n2. 相關遊戲 / 廠商\n3. 重點摘要（2-3句話）\n4. 玩家討論焦點\n\n";
@@ -541,11 +642,7 @@
 
         // 🔥 當前遊戲企劃
         function onHotClick() {
-            activeAlias = ALIAS_GAMES;
-            document.getElementById("channelTitle").innerText = "🎮 遊戲企劃頻道";
-            document.getElementById("channelBadge").innerText = "Current & Upcoming";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入你想討論的遊戲名稱，繼續優化企劃...";
+            switchChannel("games");
 
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
@@ -605,11 +702,7 @@
 
         // 🚀 即將推出企劃
         function onUpcomingClick() {
-            activeAlias = ALIAS_GAMES;
-            document.getElementById("channelTitle").innerText = "🎮 遊戲企劃頻道";
-            document.getElementById("channelBadge").innerText = "Current & Upcoming";
-            // 💡 動態調整輸入框提示文字
-            document.getElementById("chatInput").placeholder = "輸入你想討論的遊戲名稱，繼續優化企劃...";
+            switchChannel("games");
 
             var mode = document.getElementById("styleSelect").value;
             var isHot = mode === "high";
@@ -669,34 +762,15 @@
             );
         }
 
-        // 💡 智能對話發送：自動打包使用者的要求，請求 AI 生成標題與 30 秒講稿
         function sendChatMessage() {
             var input = document.getElementById("chatInput");
-            var userRawText = input.value.trim();
-            if (!userRawText) return;
-
+            var text = input.value.trim();
+            if (!text) return;
             input.value = "";
             setInputEnabled(false);
-
-            // 在聊天介面上呈現使用者輸入的原文字
-            addMessage("user", userRawText);
+            addMessage("user", text);
             showTyping();
-
-            var finalPrompt = "";
-
-            // 如果是在「每日遊戲新聞頻道」，而且使用者傳送的訊息較短，自動包裝 Prompt
-            if (activeAlias === ALIAS_NEWS) {
-                finalPrompt = "【使用者需求】：我想要做關於「" + userRawText + "」的影片內容。\n\n";
-                finalPrompt += "請根據剛才的新聞上下文或這個遊戲資訊，為我輸出：\n";
-                finalPrompt += "1. 3 個高吸引力的 YouTube/Shorts 爆款標題\n";
-                finalPrompt += "2. 一個 30 秒的影片開場 Hook 講稿（口語化、具吸引力）\n\n";
-                finalPrompt += "請用繁體中文回答，格式清晰，有標題與分隔線。不要輸出無關的系統日誌。";
-            } else {
-                // 在遊戲企劃頻道，直接傳送原文字進行自由討論
-                finalPrompt = userRawText;
-            }
-
-            callMindsWithAlias(finalPrompt, activeAlias, function(reply) {
+            callMindsWithAlias(text, activeAlias, function(reply) {
                 removeTyping();
                 addMessage("ai", reply);
                 setInputEnabled(true);
