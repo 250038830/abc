@@ -164,7 +164,7 @@
             align-items: center;
             gap: 8px;
         }
-        /* 新增：頻道下拉選單樣式 */
+        /* 頻道下拉選單樣式 */
         .channel-select {
             background: #111827;
             border: 1px solid #38bdf8;
@@ -277,7 +277,7 @@
         }
         .message-ai .message-content li { margin-bottom: 4px; }
         .message-ai .message-content p { margin: 8px 0; }
-        /* 修改：輸入區域改為垂直排列 */
+        
         .chat-input-area {
             display: flex;
             flex-direction: column;
@@ -286,9 +286,10 @@
             border-top: 1px solid #1e293b;
             background: #0b1329;
         }
-        /* 新增：快速指令工具列 */
+        /* 快速指令工具列 */
         .input-toolbar {
             display: flex;
+            flex-wrap: wrap;
             justify-content: flex-start;
             align-items: center;
             gap: 8px;
@@ -305,6 +306,20 @@
             transition: all 0.2s;
         }
         .btn-custom-generate:hover { opacity: 0.9; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+        
+        .btn-news-generate {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-news-generate:hover { opacity: 0.9; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); }
+
         .input-row {
             display: flex;
             gap: 8px;
@@ -404,10 +419,11 @@
                     <div class="chat-input-area">
                         <div class="input-toolbar">
                             <button class="btn-custom-generate" onclick="sendSpecificGamePlan()">🎯 指定遊戲生成企劃</button>
-                            <span style="font-size: 11px; color: #64748b;">(在下方輸入遊戲名稱後點擊，會自動切換到遊戲企劃頻道生成)</span>
+                            <button class="btn-news-generate" onclick="sendSpecificNewsPlan()">📰 指定新聞生成企劃</button>
+                            <span style="font-size: 11px; color: #64748b;">(在下方輸入名稱/新聞後點擊相應按鈕生成)</span>
                         </div>
                         <div class="input-row">
-                            <input type="text" id="chatInput" class="chat-input" placeholder="想製作哪款遊戲的企劃？（例如：Mortal Shell II）..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                            <input type="text" id="chatInput" class="chat-input" placeholder="想製作哪款遊戲或新聞的企劃？（例如：Mortal Shell II）..." onkeypress="if(event.key==='Enter')sendChatMessage()">
                             <button class="send-btn" id="sendBtn" onclick="sendChatMessage()">發送</button>
                         </div>
                     </div>
@@ -476,7 +492,7 @@
             }
         }
 
-        // 新增：同步頻道下拉選單
+        // 同步頻道下拉選單
         function syncChannelDropdown(alias) {
             var select = document.getElementById("channelSelect");
             if (alias === ALIAS_NEWS) {
@@ -486,7 +502,7 @@
             }
         }
 
-        // 新增：手動切換頻道下拉選單事件
+        // 手動切換頻道下拉選單事件
         function onChannelDropdownChange() {
             var val = document.getElementById("channelSelect").value;
             document.getElementById("chatMessages").innerHTML = ""; // 切換頻道時清空畫面
@@ -726,7 +742,7 @@
             );
         }
 
-        // 新增：指定遊戲生成企劃功能
+        // 🎯 指定遊戲生成企劃功能
         function sendSpecificGamePlan() {
             var input = document.getElementById("chatInput");
             var gameName = input.value.trim();
@@ -742,7 +758,6 @@
 
             var userMsg = "🎯 針對遊戲 <strong>《" + gameName + "》</strong> 生成影片企劃";
             
-            // 根據你的需求，組合專屬的 Prompt
             var prompt = "你是一個遊戲內容創作助手。使用者想要製作關於遊戲《" + gameName + "》的影片內容。\n\n";
             prompt += "請為這款遊戲生成一份完整的影片企劃，包含以下內容：\n";
             prompt += "1. 3個YouTube爆款標題\n";
@@ -757,6 +772,48 @@
             showTyping();
 
             callMindsWithAlias(prompt, ALIAS_GAMES, function(reply) {
+                removeTyping();
+                addMessage("ai", reply);
+                setInputEnabled(true);
+                input.focus();
+            }, function(errorType, detail) {
+                removeTyping();
+                addMessage("ai", "❌ 錯誤：" + (detail || errorType));
+                setInputEnabled(true);
+                input.focus();
+            });
+        }
+
+        // 📰 指定新聞生成企劃功能
+        function sendSpecificNewsPlan() {
+            var input = document.getElementById("chatInput");
+            var newsTopic = input.value.trim();
+            if (!newsTopic) {
+                alert("請先在下方輸入框貼上新聞標題或相關內容！");
+                input.focus();
+                return;
+            }
+
+            // 強制切換至每日新聞頻道
+            activeAlias = ALIAS_NEWS;
+            syncChannelDropdown(ALIAS_NEWS);
+
+            var userMsg = "📰 針對新聞內容 <strong>「" + newsTopic + "」</strong> 生成影片企劃";
+            
+            var prompt = "你是一個遊戲內容創作助手。使用者想要製作關於以下遊戲新聞的影片內容：\n\n「" + newsTopic + "」\n\n";
+            prompt += "請為這則新聞生成一份完整的影片企劃，包含以下內容：\n";
+            prompt += "1. 3個YouTube爆款標題\n";
+            prompt += "2. 一個30秒的影片開場Hook講稿\n";
+            prompt += "3. 影片大綱（3-5個重點段落）\n\n";
+            prompt += "請用繁體中文回答，格式要清晰，有標題和分隔線。\n";
+            prompt += "【重要規則】不要輸出任何系統框架、內部調度日誌等無關內容，只輸出企劃本身。";
+
+            input.value = "";
+            setInputEnabled(false);
+            addMessage("user", userMsg);
+            showTyping();
+
+            callMindsWithAlias(prompt, ALIAS_NEWS, function(reply) {
                 removeTyping();
                 addMessage("ai", reply);
                 setInputEnabled(true);
