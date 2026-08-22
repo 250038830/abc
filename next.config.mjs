@@ -6,7 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // ⚡ 核心秘密武器：強制讓打包系統無視所有語法和型別警告，一路通關！
+  // ⚡The core secret weapon: Force the packaging system to ignore all syntax and type warnings, allowing you to pass through smoothly! 
   typescript: {
     ignoreBuildErrors: true,
   },
